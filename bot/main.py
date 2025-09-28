@@ -19,6 +19,31 @@ def run_bot():
     @bot.event
     async def on_ready():
         print(f"We are ready to go in {bot.user.name}")
+
+	#find everyone in discord
+    # @bot.event
+    # async def on_ready():
+    #     print(f"Logged in as {bot.user}")
+    #     for guild in bot.guilds:
+    #         print(f"Server: {guild.name}")
+    #         async for member in guild.fetch_members(limit=None):
+    #             nickname = member.nick if member.nick else "(no nickname)"
+    #             print(
+    #                 f"Username: {member.name}, Nickname: {nickname}, ID: {member.id}")
+
+    @bot.event
+    async def on_member_join(member):
+        # DM to member
+        await member.send(f"Welcome {member.name} to server")
+
+    @bot.event
+    async def on_message(message):
+        # handle infinite loop
+        if message.author == bot.user:
+            return
+        if "pscp" in message.content.lower():
+            await message.delete()
+            await message.channel.send(f"{message.author.mention} คำต้องห้ามนะ")
     bot.run(token, log_handler=handler, log_level=logging.DEBUG)
 
 
