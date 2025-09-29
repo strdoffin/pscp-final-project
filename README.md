@@ -1,6 +1,6 @@
 # How To Run
 - create environment: ``` python -m venv venv ``` <br/>
-- activate environment: ```source venv/bin/activate``` <br/>
+- activate environment: ```venv/Scripts/activate``` <br/>
 - install dependency: ```pip install -r requirements.txt``` <br/>
 - Run Discord Bot: ```python start.py```
 

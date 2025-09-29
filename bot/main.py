@@ -3,7 +3,21 @@ from discord.ext import commands
 import logging
 from dotenv import load_dotenv
 import os
-from . import command
+from discord import app_commands
+
+class Client(commands.Bot):
+    async def on_ready(self):
+        print(f'We have logged in as {self.user}')
+        try:
+            guild = discord.Object(id=int(os.getenv('GUILD_ID')))
+            synced = await self.tree.sync(guild=guild)
+            print(f'Synced {len(synced)} command(s)')
+        except Exception as e:
+            print("error syncing",e)
+
+    async def on_message(self, message):
+        if message.author == self.user:
+            return
 
 def run_bot():
     load_dotenv(dotenv_path=".env.local")
@@ -14,29 +28,14 @@ def run_bot():
     intents = discord.Intents.default()
     intents.message_content = True
     intents.members = True
-    bot = commands.Bot(command_prefix='!', intents=intents)
+    client = Client(command_prefix='!', intents=intents)
 
-    @bot.event
-    async def on_ready():
-        await command.setup_commands(bot)
-        print(f"We are ready to go in {bot.user.name}")
+    GUILD_ID = discord.Object(id=int(os.getenv('GUILD_ID')))
 
-    @bot.event
-    async def on_member_join(member):
-        await member.send(f"Welcome {member.name} to server")
+    @client.tree.command(name="pscps", description="say PSCP!", guild=GUILD_ID)
+    async def pscp(interaction: discord.Interaction):
+        await interaction.response.send_message("PSCP!")
 
-    @bot.event
-    async def on_message(message):
-        if message.author == bot.user:
-            return
-        if "pscp" in message.content.lower():
-            await message.delete()
-            await message.channel.send(f"{message.author.mention} คำต้องห้ามนะ")
-        await bot.process_commands(message)
-
-
-    bot.run(token, log_handler=handler, log_level=logging.DEBUG)
-
-
+    client.run(token, log_handler=handler, log_level=logging.DEBUG)
 if __name__ == "__main__":
     run_bot()
