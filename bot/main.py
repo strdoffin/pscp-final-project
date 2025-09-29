@@ -3,8 +3,7 @@ from discord.ext import commands
 import logging
 from dotenv import load_dotenv
 import os
-from discord import app_commands
-
+from . import command
 
 def run_bot():
     load_dotenv(dotenv_path=".env.local")
@@ -19,6 +18,7 @@ def run_bot():
 
     @bot.event
     async def on_ready():
+        await command.setup_commands(bot)
         print(f"We are ready to go in {bot.user.name}")
 
     @bot.event
@@ -34,9 +34,6 @@ def run_bot():
             await message.channel.send(f"{message.author.mention} คำต้องห้ามนะ")
         await bot.process_commands(message)
 
-    @bot.tree.command(name="ping", description="say pong!")
-    async def ping(interaction: discord.Interaction):
-        await interaction.response.send_message("pong!")
 
     bot.run(token, log_handler=handler, log_level=logging.DEBUG)
 
