@@ -9,6 +9,5 @@ async def setup_commands(bot: discord.Client):
     @bot.tree.command(name="PSCP", description="say PSCP!")
     async def pscp(interaction: discord.Interaction):
         await interaction.response.send_message("PSCP!")
-    GUILD_ID = 1421750535731544105
     guild = discord.Object(id=GUILD_ID)
     await bot.tree.sync(guild=guild)
