@@ -17,16 +17,9 @@ def run_bot():
     intents.members = True
     bot = commands.Bot(command_prefix='!', intents=intents)
 
-    guild_id = discord.Object(id=1421750535731544105)
-
     @bot.event
     async def on_ready():
         print(f"We are ready to go in {bot.user.name}")
-        try:
-            synced = await bot.tree.sync(guild=guild_id)
-            print(f"Synced {len(synced)} commands.")
-        except Exception as e:
-            print(f"Failed to sync commands: {e}")
 
     @bot.event
     async def on_member_join(member):
