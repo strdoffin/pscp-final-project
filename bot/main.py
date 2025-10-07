@@ -4,6 +4,7 @@ import logging
 from dotenv import load_dotenv
 import os
 
+
 class Client(commands.Bot):
     async def on_ready(self):
         print(f'✅ Logged in as {self.user}')
@@ -17,7 +18,9 @@ class Client(commands.Bot):
             print("Error syncing commands:", e)
 
 
+
 def run_bot():
+    """Starting Discord Bot"""
     load_dotenv(dotenv_path=".env.local")
 
     token = os.getenv('DISCORD_TOKEN')
@@ -44,5 +47,9 @@ def run_bot():
 
     client.run(token, log_handler=handler, log_level=logging.DEBUG)
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 0dccc806fdf14e60575677eb0ece16cb267a1e7a
 if __name__ == "__main__":
     run_bot()
