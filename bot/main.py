@@ -3,21 +3,8 @@ from discord.ext import commands
 import logging
 from dotenv import load_dotenv
 import os
-
-
-class Client(commands.Bot):
-    async def on_ready(self):
-        print(f'✅ Logged in as {self.user}')
-        guild_id = int(os.getenv('GUILD_ID'))
-        guild = discord.Object(id=guild_id)
-
-        try:
-            synced = await self.tree.sync(guild=guild)
-            print(f'Synced {len(synced)} command(s) to guild {guild_id}')
-        except Exception as e:
-            print("Error syncing commands:", e)
-
-
+from bot.commands.tong import register_tong
+from bot.commands.ping import register_ping
 
 def run_bot():
     """Starting Discord Bot"""
@@ -32,24 +19,22 @@ def run_bot():
     intents.message_content = True
     intents.members = True
 
-    client = Client(command_prefix='!', intents=intents)
     guild = discord.Object(id=guild_id)
+    bot = commands.Bot(command_prefix='!', intents=intents)
+    register_tong(bot, guild)
+    register_ping(bot, guild)
 
-    @client.tree.command(name="pscps", description="Say PSCP!", guild=guild)
-    async def pscp(interaction: discord.Interaction):
-        await interaction.response.send_message("PSCP!")
-    @client.tree.command(name="tong", description="I Kwai TONG!", guild=guild)
-    async def tong(interaction: discord.Interaction):
-        await interaction.response.send_message("I Kwai TONG!")
-    @client.tree.command(name="katang", description="I Kwaii katang!", guild=guild)
-    async def tong(interaction: discord.Interaction):
-        await interaction.response.send_message("I Kwaii katang!")
+    @bot.event
+    async def on_ready():
+        print(f'✅ Logged in as {bot.user}')
+        try:
+            synced = await bot.tree.sync(guild=guild)
+            print(f'Synced {len(synced)} command(s) to guild {guild_id}')
+        except Exception as e:
+            print("Error syncing commands:", e)
 
-    client.run(token, log_handler=handler, log_level=logging.DEBUG)
 
-<<<<<<< HEAD
-=======
+    bot.run(token, log_handler=handler, log_level=logging.DEBUG)
 
->>>>>>> 0dccc806fdf14e60575677eb0ece16cb267a1e7a
 if __name__ == "__main__":
     run_bot()
