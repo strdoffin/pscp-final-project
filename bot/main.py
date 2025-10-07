@@ -5,21 +5,25 @@ from dotenv import load_dotenv
 import os
 from discord import app_commands
 
+
 class Client(commands.Bot):
     async def on_ready(self):
+        """Starting Discord Bot"""
         print(f'We have logged in as {self.user}')
-        try:
+       try:
             guild = discord.Object(id=int(os.getenv('GUILD_ID')))
             synced = await self.tree.sync(guild=guild)
             print(f'Synced {len(synced)} command(s)')
         except Exception as e:
-            print("error syncing",e)
+            print("error syncing", e)
 
     async def on_message(self, message):
         if message.author == self.user:
             return
 
+
 def run_bot():
+    """Starting Discord Bot"""
     load_dotenv(dotenv_path=".env.local")
 
     token = os.getenv('DISCORD_TOKEN')
@@ -37,5 +41,7 @@ def run_bot():
         await interaction.response.send_message("PSCP!")
 
     client.run(token, log_handler=handler, log_level=logging.DEBUG)
+
+
 if __name__ == "__main__":
     run_bot()
