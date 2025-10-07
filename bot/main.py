@@ -10,7 +10,7 @@ class Client(commands.Bot):
     async def on_ready(self):
         """Starting Discord Bot"""
         print(f'We have logged in as {self.user}')
-       try:
+        try:
             guild = discord.Object(id=int(os.getenv('GUILD_ID')))
             synced = await self.tree.sync(guild=guild)
             print(f'Synced {len(synced)} command(s)')
