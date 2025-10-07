@@ -35,7 +35,6 @@ def run_bot():
     @client.tree.command(name="pscps", description="Say PSCP!", guild=guild)
     async def pscp(interaction: discord.Interaction):
         await interaction.response.send_message("PSCP!")
-
     @client.tree.command(name="tong", description="I Kwai TONG!", guild=guild)
     async def tong(interaction: discord.Interaction):
         await interaction.response.send_message("I Kwai TONG!")
