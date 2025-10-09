@@ -16,15 +16,8 @@ def register_dmlink(client: discord.Client, guild: discord.Guild):
         channel = client.get_channel(target_channel_id)
         if day.weekday() == 2 and day.hour==18 and day.minute==30:
             await channel.send("อย่าลืมทำ Feedback PSCP นะครับเพิ่ลๆ\n@everyone")
-        if day.weekday() == 3 and day.hour==21 and day.minute==0:
+        if day.weekday() == 3 and day.hour==21:
             await channel.send("อย่าลืมทำ Feedback PSCP นะครับเพิ่ลๆ last chance\n@everyone")
         else:
-            print("error")
-
-    @client.event
-    async def on_ready():
-        if not sent_noti.is_running():
-            sent_noti.start()
-            print("Daily notification task started.")
-
-    client.run("MTQyMTc0OTI5MjYxOTY2MTQxMg.GNdr3Y.vpXdi3PtB3YXenorrp1Idxx0hzv19K3nwlumhY")
+            print("Time checked, no message needed.")
+    return sent_noti

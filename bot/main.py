@@ -8,6 +8,7 @@ from bot.commands.tong import register_tong
 from bot.commands.ping import register_ping
 from bot.commands.dmlink import register_dmlink
 from bot.commands.pair import register_pair, register_dmpair, weekly_dm_scheduler  # import scheduler
+from bot.commands.dmlink import register_dmlink
 
 import asyncio
 
@@ -35,6 +36,8 @@ def run_bot():
     register_pair(bot, guild)
     register_dmpair(bot, guild)
 
+    send_noti_task = register_dmlink(bot,guild)
+
     @bot.event
     async def on_ready():
         print(f'✅ Logged in as {bot.user}')
@@ -44,6 +47,10 @@ def run_bot():
             bot.loop.create_task(weekly_dm_scheduler(bot))
             bot.weekly_dm_started = True
             print("🚀 Weekly DM scheduler started")
+
+        if not send_noti_task.is_running():
+            send_noti_task.start()
+            print("Daily notification task started.")
 
         # Sync commands
         try:
@@ -57,3 +64,4 @@ def run_bot():
 
 if __name__ == "__main__":
     run_bot()
+
