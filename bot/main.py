@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import os
 from bot.commands.tong import register_tong
 from bot.commands.ping import register_ping
+from bot.commands.dmlink import register_dmlink
 
 def run_bot():
     """Starting Discord Bot"""
@@ -23,6 +24,7 @@ def run_bot():
     bot = commands.Bot(command_prefix='!', intents=intents)
     register_tong(bot, guild)
     register_ping(bot, guild)
+    register_dmlink(bot, guild)
 
     @bot.event
     async def on_ready():
