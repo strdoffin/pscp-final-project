@@ -3,8 +3,14 @@ from discord.ext import commands
 import logging
 from dotenv import load_dotenv
 import os
+
 from bot.commands.tong import register_tong
 from bot.commands.ping import register_ping
+from bot.commands.dmlink import register_dmlink
+from bot.commands.pair import register_pair, register_dmpair, weekly_dm_scheduler  # import scheduler
+from bot.commands.dmlink import register_dmlink
+
+import asyncio
 
 def run_bot():
     """Starting Discord Bot"""
@@ -18,23 +24,43 @@ def run_bot():
     intents = discord.Intents.default()
     intents.message_content = True
     intents.members = True
+    intents.dm_messages = True 
 
     guild = discord.Object(id=guild_id)
     bot = commands.Bot(command_prefix='!', intents=intents)
+
+    # ✅ Register all commands
     register_tong(bot, guild)
     register_ping(bot, guild)
+    register_dmlink(bot, guild)
+    register_pair(bot, guild)
+    register_dmpair(bot, guild)
+
+    send_noti_task = register_dmlink(bot,guild)
 
     @bot.event
     async def on_ready():
         print(f'✅ Logged in as {bot.user}')
+
+        # Start the weekly scheduler if not already running
+        if not hasattr(bot, 'weekly_dm_started'):
+            bot.loop.create_task(weekly_dm_scheduler(bot))
+            bot.weekly_dm_started = True
+            print("🚀 Weekly DM scheduler started")
+
+        if not send_noti_task.is_running():
+            send_noti_task.start()
+            print("Daily notification task started.")
+
+        # Sync commands
         try:
             synced = await bot.tree.sync(guild=guild)
             print(f'Synced {len(synced)} command(s) to guild {guild_id}')
         except Exception as e:
             print("Error syncing commands:", e)
 
-
     bot.run(token, log_handler=handler, log_level=logging.DEBUG)
+
 
 if __name__ == "__main__":
     run_bot()
