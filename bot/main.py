@@ -7,7 +7,7 @@ from bot.commands.tong import register_tong
 from bot.commands.notification import register_notification
 from bot.commands.pair import register_pair, register_dmpair, weekly_dm_scheduler  # import scheduler
 from bot.commands.notification import register_notification
-from bot.commands.feedback_link import register_feedback_link
+from bot.commands.ijudge_link import register_ijudge_link
 
 def run_bot():
     """Starting Discord Bot"""
@@ -27,7 +27,7 @@ def run_bot():
     bot = commands.Bot(command_prefix='!', intents=intents)
 
     # ✅ Register all commands
-    register_feedback_link(bot, guild)
+    register_ijudge_link(bot, guild)
     register_tong(bot, guild)
     register_notification(bot, guild)
     register_pair(bot, guild)
