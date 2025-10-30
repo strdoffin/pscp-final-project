@@ -3,14 +3,11 @@ from discord.ext import commands
 import logging
 from dotenv import load_dotenv
 import os
-
 from bot.commands.tong import register_tong
-from bot.commands.ping import register_ping
-from new.bot.commands.notification import register_notification
+from bot.commands.notification import register_notification
 from bot.commands.pair import register_pair, register_dmpair, weekly_dm_scheduler  # import scheduler
-from new.bot.commands.notification import register_notification
-
-import asyncio
+from bot.commands.notification import register_notification
+from bot.commands.feedback_link import register_feedback_link
 
 def run_bot():
     """Starting Discord Bot"""
@@ -30,8 +27,8 @@ def run_bot():
     bot = commands.Bot(command_prefix='!', intents=intents)
 
     # ✅ Register all commands
+    register_feedback_link(bot, guild)
     register_tong(bot, guild)
-    register_ping(bot, guild)
     register_notification(bot, guild)
     register_pair(bot, guild)
     register_dmpair(bot, guild)
