@@ -6,9 +6,9 @@ import os
 
 from bot.commands.tong import register_tong
 from bot.commands.ping import register_ping
-from bot.commands.dmlink import register_dmlink
+from new.bot.commands.notification import register_notification
 from bot.commands.pair import register_pair, register_dmpair, weekly_dm_scheduler  # import scheduler
-from bot.commands.dmlink import register_dmlink
+from new.bot.commands.notification import register_notification
 
 import asyncio
 
@@ -32,11 +32,11 @@ def run_bot():
     # ✅ Register all commands
     register_tong(bot, guild)
     register_ping(bot, guild)
-    register_dmlink(bot, guild)
+    register_notification(bot, guild)
     register_pair(bot, guild)
     register_dmpair(bot, guild)
 
-    send_noti_task = register_dmlink(bot,guild)
+    send_noti_task = register_notification(bot,guild)
 
     @bot.event
     async def on_ready():
