@@ -1,7 +1,7 @@
 import json
 import os
 
-DATA_FILE = "feedback_links.json"
+DATA_FILE = "ijudge_links.json"
 
 def load_links():
     if not os.path.exists(DATA_FILE):

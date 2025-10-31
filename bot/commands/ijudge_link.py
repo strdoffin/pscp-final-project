@@ -11,10 +11,11 @@ def register_ijudge_link(client: discord.Client, guild: discord.Object):
         day="Release day in YYYY-MM-DD format"
     )
     async def ijudge_command(interaction: discord.Interaction, rounds: str, day: str):
-        # Validate day format
+        #validate permission
         if interaction.user.roles is None or not any(role.name == "staff" for role in interaction.user.roles):
             await interaction.response.send_message("❌ You don't have permission to use this command.", ephemeral=True)
             return
+        # Validate day format
         try:
             release_date = datetime.strptime(day, "%Y-%m-%d").date()
         except ValueError:
