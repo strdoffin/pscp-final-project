@@ -7,7 +7,7 @@ import asyncio
 import pytz  # for timezone
 
 # --- Config ---
-LOCAL_CSV = r"data/pair_data.csv"
+LOCAL_CSV = r"data\pair_data.csv"
 GLOBAL_DF = None  # cache
 THAI_TZ = pytz.timezone("Asia/Bangkok")  # Thailand timezone
 
@@ -147,4 +147,3 @@ def register_dmpair(bot: discord.Client, guild: discord.Object):
         await interaction.response.defer(ephemeral=True)
         await send_weekly_dm(interaction.client)
         await interaction.followup.send("✅ Sent test DM! (check your inbox)", ephemeral=True)
-

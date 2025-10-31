@@ -10,6 +10,7 @@ from bot.commands.pair import register_pair, register_dmpair, weekly_dm_schedule
 from bot.commands.notification import register_notification
 from bot.commands.ijudge import register_ijudge_link
 from bot.commands.score import register_score_command  # ⬇️ 1. เพิ่ม import นี้
+from bot.commands.random_pair import register_random_command
 
 def run_bot():
     """Starting Discord Bot"""
@@ -36,6 +37,7 @@ def run_bot():
     register_pair(bot, guild)
     register_dmpair(bot, guild)
     register_score_command(bot, guild) # ⬇️ 2. เพิ่มการ register คำสั่งนี้
+    register_random_command(bot, guild)
 
     send_noti_task = register_notification(bot,guild)
 
