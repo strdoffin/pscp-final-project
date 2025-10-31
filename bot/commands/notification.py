@@ -47,17 +47,14 @@ def register_notification(client: discord.Client, guild: discord.Object):
             }
 
             # Send reminders
-            if delta.total_seconds() <= 0 and keys["exact"] not in sent_notifications:
-                await channel.send(task["message"].replace("\\n", "\n"))
-                sent_notifications.add(keys["exact"])
-            elif 0 < delta.total_seconds() <= 3600 and keys["1_hour"] not in sent_notifications:
-                await channel.send(f"⏰ Reminder 1 hour left: {task['message'].replace('\\n', '\n')}")
+            if 0 < delta.total_seconds() <= 3600 and keys["1_hour"] not in sent_notifications:
+                await channel.send(f"⏰ @everyone ใกล้หมดเวลาส่ง feedback form แล้วนะ: {task['message'].replace('\\n', '\n')}")
                 sent_notifications.add(keys["1_hour"])
             elif 86400 - 60 <= delta.total_seconds() <= 86400 + 60 and keys["1_day"] not in sent_notifications:
-                await channel.send(f"⏰ Reminder 1 day left: {task['message'].replace('\\n', '\n')}")
+                await channel.send(f"⏰ @everyone อย่าลืมส่ง feedback form กันนะเหลืออีก1วัน: {task['message'].replace('\\n', '\n')}")
                 sent_notifications.add(keys["1_day"])
             elif 3*86400 - 60 <= delta.total_seconds() <= 3*86400 + 60 and keys["3_days"] not in sent_notifications:
-                await channel.send(f"⏰ Reminder 3 days left: {task['message'].replace('\\n', '\n')}")
+                await channel.send(f"⏰ @everyone อย่าลืมส่ง feedback form กันนะเหลืออีก3วัน: {task['message'].replace('\\n', '\n')}")
                 sent_notifications.add(keys["3_days"])
 
     return sent_noti
