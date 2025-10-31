@@ -3,48 +3,50 @@ from discord import app_commands
 from bot.commands import data_store
 from datetime import datetime
 
-def register_add_schedule(client: discord.Client, guild: discord.Object):
+def register_feedback_schedule(client: discord.Client, guild: discord.Object):
     @client.tree.command(
-        name="addschedule",
-        description="Add a new notification to the schedule JSON",
+        name="feedback",
+        description="Add a new feedback notification",
         guild=guild
     )
     @app_commands.describe(
-        date="Date in YYYY-MM-DD format",
-        hour="Hour in 24h format (0-23)",
+        date="Date in YYYY-MM-DD",
+        hour="Hour (0-23)",
         minute="Minute (0-59)",
-        message="Message to send"
+        link="link to send"
     )
     async def addschedule_command(
         interaction: discord.Interaction,
         date: str,
         hour: int,
         minute: int,
-        message: str
+        link: str
     ):
-        # Validate date format
-        try:
-            datetime.strptime(date, "%Y-%m-%d")
-            if not (0 <= hour <= 23) or not (0 <= minute <= 59):
-                raise ValueError("Hour or minute out of range")
-        except ValueError:
-            await interaction.response.send_message("❌ Invalid date format. Use YYYY-MM-DD. Hour must be 0-23 and minute must be 0-59.", ephemeral=True)
+        if not any(role.name.lower() == "staff" for role in interaction.user.roles):
+            await interaction.response.send_message("❌ You don't have permission.", ephemeral=True)
             return
 
-        # Load current schedules
-        schedules = data_store.load_schedules()
+        # Validate date
+        try:
+            dt = datetime.strptime(date, "%Y-%m-%d")
+            if not (0 <= hour <= 23 and 0 <= minute <= 59):
+                raise ValueError
+        except ValueError:
+            await interaction.response.send_message("❌ Invalid date/time format.", ephemeral=True)
+            return
 
-        # Append new schedule
+        schedules = data_store.load_schedules()
         schedules.append({
-            "datetime": date,
+            "year": dt.year,
+            "month": dt.month,
+            "day": dt.day,
             "hour": hour,
             "minute": minute,
-            "message": message
+            "message": link
         })
-
-        # Save back to JSON
         data_store.save_schedules(schedules)
 
         await interaction.response.send_message(
-            f"✅ Added new notification for {date} at {hour:02d}:{minute:02d}"
+            f"✅ Added feedback notification for `{date} {hour:02d}:{minute:02d}`",
+            ephemeral=True
         )

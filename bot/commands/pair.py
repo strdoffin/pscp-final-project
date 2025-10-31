@@ -11,6 +11,10 @@ LOCAL_CSV = r"data\pair_data.csv"
 GLOBAL_DF = None  # cache
 THAI_TZ = pytz.timezone("Asia/Bangkok")  # Thailand timezone
 
+async def show_ijudge(interaction: discord.Interaction):
+    if not any(role.name.lower() == "staff" for role in interaction.user.roles):
+        await interaction.response.send_message("❌ You don't have permission.", ephemeral=True)
+        return
 # --- Load CSV once ---
 def load_csv():
     global GLOBAL_DF
