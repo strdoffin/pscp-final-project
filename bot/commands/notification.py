@@ -1,6 +1,6 @@
 import discord
-import datetime
 from discord.ext import tasks
+from datetime import datetime
 import pytz
 from bot.commands import data_store
 
@@ -9,52 +9,58 @@ DAY_TZ = pytz.timezone("Asia/Bangkok")
 
 def register_notification(client: discord.Client, guild: discord.Object):
     sent_notifications = set()
+
     @tasks.loop(minutes=1)
     async def sent_noti():
         await client.wait_until_ready()
-        now = datetime.datetime.now(DAY_TZ)
-        today_str = now.strftime("%Y-%m-%d")
+        now = datetime.now(DAY_TZ)
         channel = client.get_channel(TARGET_CHANNEL_ID)
         if not channel:
             return
 
-        # Load saved links
-        links = data_store.load_links()
+        async def process_items(items, label: str):
+            for item in items:
+                try:
+                    # Build datetime from separate fields
+                    item_dt = datetime(
+                        year=item["year"],
+                        month=item["month"],
+                        day=item["day"],
+                        hour=item["hour"],
+                        minute=item["minute"]
+                    )
+                    # Localize to Bangkok timezone
+                    item_dt = DAY_TZ.localize(item_dt)
+                    delta = item_dt - now
 
-        # Check if ijudge has release today
-        for item in links:
-            if item["day"] == today_str and now.hour == 18 and now.minute == 30:
-                await channel.send(f"🚀 Release today! Check this link: {item['link']} @everyone")
+                    # Create unique keys for each reminder
+                    keys = {
+                        "3d": f"{item.get('round', item.get('message', ''))}_{item['year']:04d}-{item['month']:02d}-{item['day']:02d} {item['hour']:02d}:{item['minute']:02d}_3d",
+                        "1d": f"{item.get('round', item.get('message', ''))}_{item['year']:04d}-{item['month']:02d}-{item['day']:02d} {item['hour']:02d}:{item['minute']:02d}_1d",
+                        "1h": f"{item.get('round', item.get('message', ''))}_{item['year']:04d}-{item['month']:02d}-{item['day']:02d} {item['hour']:02d}:{item['minute']:02d}_1h",
+                        "30m": f"{item.get('round', item.get('message', ''))}_{item['year']:04d}-{item['month']:02d}-{item['day']:02d} {item['hour']:02d}:{item['minute']:02d}_30m",
+                    }
 
-        schedules = data_store.load_schedules()
+                    async def send(msg, key):
+                        if key not in sent_notifications:
+                            await channel.send(msg)
+                            sent_notifications.add(key)
 
-        for task in schedules:
-            # Convert task date & hour/minute to datetime object
-            task_dt = datetime.datetime.strptime(
-                f"{task['datetime']} {task['hour']:02d}:{task['minute']:02d}",
-                "%Y-%m-%d %H:%M"
-            )
-            task_dt = DAY_TZ.localize(task_dt)
-            # Calculate difference from now
-            delta = task_dt - now
+                    dt_str = f"{item['year']:04d}-{item['month']:02d}-{item['day']:02d} {item['hour']:02d}:{item['minute']:02d}"
 
-            # Prepare keys for different reminders
-            keys = {
-                "exact": f"{task['datetime']}_{task['hour']:02d}{task['minute']:02d}_exact",
-                "1_day": f"{task['datetime']}_{task['hour']:02d}{task['minute']:02d}_1day",
-                "3_days": f"{task['datetime']}_{task['hour']:02d}{task['minute']:02d}_3days",
-                "1_hour": f"{task['datetime']}_{task['hour']:02d}{task['minute']:02d}_1hour",
-            }
+                    if 3*86400 - 60 <= delta.total_seconds() <= 3*86400 + 60:
+                        await send(f"📢 @everyone เหลืออีก **3 วัน** ก่อน `{item.get('round', item.get('message', ''))}` ({label})!\n🕒 {dt_str}", keys["3d"])
+                    elif 86400 - 60 <= delta.total_seconds() <= 86400 + 60:
+                        await send(f"⚠️ @everyone เหลืออีก **1 วันสุดท้าย** ก่อน `{item.get('round', item.get('message', ''))}` ({label})!\n📅 {dt_str}", keys["1d"])
+                    elif 3600 - 60 <= delta.total_seconds() <= 3600 + 60:
+                        await send(f"⏰ @everyone อีก **1 ชั่วโมง** จะถึง `{item.get('round', item.get('message', ''))}` ({label})!\n📅 {dt_str}", keys["1h"])
+                    elif 1800 - 60 <= delta.total_seconds() <= 1800 + 60:
+                        await send(f"🚨 @everyone เหลือ **30 นาทีสุดท้าย** ก่อน `{item.get('round', item.get('message', ''))}` ({label})!\n📅 {dt_str}", keys["30m"])
 
-            # Send reminders
-            if 0 < delta.total_seconds() <= 3600 and keys["1_hour"] not in sent_notifications:
-                await channel.send(f"⏰ @everyone ใกล้หมดเวลาส่ง feedback form แล้วนะ: {task['message'].replace('\\n', '\n')}")
-                sent_notifications.add(keys["1_hour"])
-            elif 86400 - 60 <= delta.total_seconds() <= 86400 + 60 and keys["1_day"] not in sent_notifications:
-                await channel.send(f"⏰ @everyone อย่าลืมส่ง feedback form กันนะเหลืออีก1วัน: {task['message'].replace('\\n', '\n')}")
-                sent_notifications.add(keys["1_day"])
-            elif 3*86400 - 60 <= delta.total_seconds() <= 3*86400 + 60 and keys["3_days"] not in sent_notifications:
-                await channel.send(f"⏰ @everyone อย่าลืมส่ง feedback form กันนะเหลืออีก3วัน: {task['message'].replace('\\n', '\n')}")
-                sent_notifications.add(keys["3_days"])
+                except Exception as e:
+                    print(f"⚠️ Error checking {label} item: {e}")
+
+        await process_items(data_store.load_links(), "iJudge")
+        await process_items(data_store.load_schedules(), "Feedback")
 
     return sent_noti
