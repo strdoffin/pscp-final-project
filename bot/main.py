@@ -1,13 +1,14 @@
 import discord
 from discord.ext import commands
 import logging
+from bot.commands.feedback import register_add_schedule
 from dotenv import load_dotenv
 import os
 from bot.commands.tong import register_tong
 from bot.commands.notification import register_notification
 from bot.commands.pair import register_pair, register_dmpair, weekly_dm_scheduler  # import scheduler
 from bot.commands.notification import register_notification
-from bot.commands.ijudge_link import register_ijudge_link
+from bot.commands.ijudge import register_ijudge_link
 
 def run_bot():
     """Starting Discord Bot"""
@@ -28,6 +29,7 @@ def run_bot():
 
     # ✅ Register all commands
     register_ijudge_link(bot, guild)
+    register_add_schedule(bot, guild)
     register_tong(bot, guild)
     register_notification(bot, guild)
     register_pair(bot, guild)

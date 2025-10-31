@@ -8,29 +8,7 @@ TARGET_CHANNEL_ID = 1425142738717904926
 DAY_TZ = pytz.timezone("Asia/Bangkok")
 
 def register_notification(client: discord.Client, guild: discord.Object):
-
-
-    # Optional: fixed notifications if wanna add more...
-    # SCHEDULES.append({
-    #     "weekday": 0,
-    #     "hour": 9,
-    #     "minute": 0,
-    #     "message": "🌞 Happy Monday everyone!"
-    # })
-    SCHEDULES = [
-        {
-            "weekday": 2,  # Wednesday
-            "hour": 18,
-            "minute": 30,
-            "message": "📌 อย่าลืมทำ Feedback PSCP นะครับเพิ่ลๆ\n@everyone"
-        },
-        {
-            "weekday": 3,  # Thursday
-            "hour": 21,
-            "minute": 0,
-            "message": "📌 อย่าลืมทำ Feedback PSCP นะครับเพิ่ลๆ last chance\n@everyone"
-        }
-    ]
+    sent_notifications = set()
     @tasks.loop(minutes=1)
     async def sent_noti():
         await client.wait_until_ready()
@@ -43,17 +21,43 @@ def register_notification(client: discord.Client, guild: discord.Object):
         # Load saved links
         links = data_store.load_links()
 
-        # Check if any link has release today
+        # Check if ijudge has release today
         for item in links:
             if item["day"] == today_str and now.hour == 18 and now.minute == 30:
                 await channel.send(f"🚀 Release today! Check this link: {item['link']} @everyone")
 
-        for task in SCHEDULES:
-            if (
-                now.weekday() == task["weekday"]
-                and now.hour == task["hour"]
-                and now.minute == task["minute"]
-            ):
-                await channel.send(task["message"])
+        schedules = data_store.load_schedules()
+
+        for task in schedules:
+            # Convert task date & hour/minute to datetime object
+            task_dt = datetime.datetime.strptime(
+                f"{task['datetime']} {task['hour']:02d}:{task['minute']:02d}",
+                "%Y-%m-%d %H:%M"
+            )
+            task_dt = DAY_TZ.localize(task_dt)
+            # Calculate difference from now
+            delta = task_dt - now
+
+            # Prepare keys for different reminders
+            keys = {
+                "exact": f"{task['datetime']}_{task['hour']:02d}{task['minute']:02d}_exact",
+                "1_day": f"{task['datetime']}_{task['hour']:02d}{task['minute']:02d}_1day",
+                "3_days": f"{task['datetime']}_{task['hour']:02d}{task['minute']:02d}_3days",
+                "1_hour": f"{task['datetime']}_{task['hour']:02d}{task['minute']:02d}_1hour",
+            }
+
+            # Send reminders
+            if delta.total_seconds() <= 0 and keys["exact"] not in sent_notifications:
+                await channel.send(task["message"].replace("\\n", "\n"))
+                sent_notifications.add(keys["exact"])
+            elif 0 < delta.total_seconds() <= 3600 and keys["1_hour"] not in sent_notifications:
+                await channel.send(f"⏰ Reminder 1 hour left: {task['message'].replace('\\n', '\n')}")
+                sent_notifications.add(keys["1_hour"])
+            elif 86400 - 60 <= delta.total_seconds() <= 86400 + 60 and keys["1_day"] not in sent_notifications:
+                await channel.send(f"⏰ Reminder 1 day left: {task['message'].replace('\\n', '\n')}")
+                sent_notifications.add(keys["1_day"])
+            elif 3*86400 - 60 <= delta.total_seconds() <= 3*86400 + 60 and keys["3_days"] not in sent_notifications:
+                await channel.send(f"⏰ Reminder 3 days left: {task['message'].replace('\\n', '\n')}")
+                sent_notifications.add(keys["3_days"])
 
     return sent_noti
