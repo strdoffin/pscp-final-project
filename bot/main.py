@@ -6,9 +6,10 @@ from dotenv import load_dotenv
 import os
 from bot.commands.tong import register_tong
 from bot.commands.notification import register_notification
-from bot.commands.pair import register_pair, register_dmpair, weekly_dm_scheduler  # import scheduler
+from bot.commands.pair import register_pair, register_dmpair, weekly_dm_scheduler
 from bot.commands.notification import register_notification
 from bot.commands.ijudge import register_ijudge_link
+from bot.commands.score import register_score_command  # ⬇️ 1. เพิ่ม import นี้
 
 def run_bot():
     """Starting Discord Bot"""
@@ -34,6 +35,7 @@ def run_bot():
     register_notification(bot, guild)
     register_pair(bot, guild)
     register_dmpair(bot, guild)
+    register_score_command(bot, guild) # ⬇️ 2. เพิ่มการ register คำสั่งนี้
 
     send_noti_task = register_notification(bot,guild)
 
