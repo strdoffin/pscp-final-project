@@ -67,7 +67,7 @@ def run_bot():
             synced = await bot.tree.sync(guild=guild)
             print(f'Synced {len(synced)} command(s) to guild {guild_id}')
             for cmd in synced:
-                print(f" - /{cmd.name}")
+                print(f" - /{cmd.name}", "#" +cmd.description)
         except Exception as e:
             print("Error syncing commands:", e)
 
