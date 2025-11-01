@@ -39,11 +39,11 @@ def run_bot():
     register_tong(bot, guild)
     register_pair(bot, guild)
     register_dmpair(bot, guild)
-    register_score_command(bot, guild) # ⬇️ 2. เพิ่มการ register คำสั่งนี้
+    register_score_command(bot, guild)
     register_random_command(bot, guild)
+    register_json_tools(bot, guild)
 
     send_noti_task = register_notification(bot,guild)
-    register_json_tools(bot, guild)
 
     @bot.event
     async def on_ready():
@@ -64,6 +64,8 @@ def run_bot():
         try:
             synced = await bot.tree.sync(guild=guild)
             print(f'Synced {len(synced)} command(s) to guild {guild_id}')
+            for cmd in synced:
+                print(f" - /{cmd.name}")
         except Exception as e:
             print("Error syncing commands:", e)
 
