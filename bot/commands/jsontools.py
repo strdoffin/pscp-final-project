@@ -10,13 +10,13 @@ def register_json_tools(client: discord.Client, guild: discord.Object):
         guild=guild
     )
     async def show_ijudge(interaction: discord.Interaction):
-        if not any(role.name.lower() == "staff" for role in interaction.user.roles):
-            await interaction.response.send_message("❌ You don't have permission.", ephemeral=True)
+        if not any(role.name == "TA" for role in interaction.user.roles):
+            await interaction.response.send_message("❌ ไม่มีสิทธิ์ในการใช้คำสั่ง", ephemeral=True)
             return
 
         schedules = data_store.load_links()
         if not schedules:
-            await interaction.response.send_message("No ijudge rounds found.", ephemeral=True)
+            await interaction.response.send_message("ไม่พบรอบที่ลงไว้", ephemeral=True)
             return
 
         msg = "📋 **Ijudge Rounds:**\n"
@@ -28,7 +28,7 @@ def register_json_tools(client: discord.Client, guild: discord.Object):
             hour = item.get("hour", 0)
             minute = item.get("minute", 0)
 
-            msg += f"{idx}. `round : {label}` at `{year}-{month:02d}-{day:02d} {hour:02d}:{minute:02d}`\n"
+            msg += f"{idx}. `รอบที่ : {label}` เวลา `{year}-{month:02d}-{day:02d} {hour:02d}:{minute:02d}`\n"
 
         await interaction.response.send_message(msg, ephemeral=True)
     # ===== Clear all iJudge entries =====
@@ -38,12 +38,12 @@ def register_json_tools(client: discord.Client, guild: discord.Object):
         guild=guild
     )
     async def clear_ijudge(interaction: discord.Interaction):
-        if not any(role.name.lower() == "staff" for role in interaction.user.roles):
-            await interaction.response.send_message("❌ You don't have permission.", ephemeral=True)
+        if not any(role.name == "TA" for role in interaction.user.roles):
+            await interaction.response.send_message("❌ ไม่มีสิทธิ์ในการใช้คำสั่ง", ephemeral=True)
             return
 
         data_store.save_links([])
-        await interaction.response.send_message("✅ All iJudge rounds cleared!", ephemeral=True)
+        await interaction.response.send_message("✅ ลบรอบทั้งหมดเสร็จสิ้น", ephemeral=True)
 
     # ===== Clear specific iJudge entry =====
     @client.tree.command(
@@ -53,19 +53,19 @@ def register_json_tools(client: discord.Client, guild: discord.Object):
     )
     @app_commands.describe(round="Round name to delete")
     async def clear_ijudge_round(interaction: discord.Interaction, round: str):
-        if not any(role.name.lower() == "staff" for role in interaction.user.roles):
-            await interaction.response.send_message("❌ You don't have permission.", ephemeral=True)
+        if not any(role.name == "TA" for role in interaction.user.roles):
+            await interaction.response.send_message("❌ ไม่มีสิทธิ์ในการใช้คำสั่ง", ephemeral=True)
             return
 
         links = data_store.load_links()
         new_links = [item for item in links if item["round"].lower() != round.lower()]
 
         if len(new_links) == len(links):
-            await interaction.response.send_message(f"⚠️ No round found with name `{round}`", ephemeral=True)
+            await interaction.response.send_message(f"⚠️ ไม่พบรอบที่ `{round}`", ephemeral=True)
             return
 
         data_store.save_links(new_links)
-        await interaction.response.send_message(f"✅ Round `{round}` deleted from iJudge list.", ephemeral=True)
+        await interaction.response.send_message(f"✅ รอบที่ `{round}` ถูกลบออกจาก iJudge list.", ephemeral=True)
 
     # ===== Show Feedback schedules =====
     @client.tree.command(
@@ -74,13 +74,13 @@ def register_json_tools(client: discord.Client, guild: discord.Object):
         guild=guild
     )
     async def show_feedback(interaction: discord.Interaction):
-        if not any(role.name.lower() == "staff" for role in interaction.user.roles):
-            await interaction.response.send_message("❌ You don't have permission.", ephemeral=True)
+        if not any(role.name == "TA" for role in interaction.user.roles):
+            await interaction.response.send_message("❌ ไม่มีสิทธิ์ในการใช้คำสั่ง", ephemeral=True)
             return
 
         schedules = data_store.load_schedules()
         if not schedules:
-            await interaction.response.send_message("ℹ️ No feedback schedules found.", ephemeral=True)
+            await interaction.response.send_message("ℹ️ ไม่พบตาราง feed back", ephemeral=True)
             return
 
         msg = "📋 **Feedback Schedules:**\n"
@@ -96,12 +96,12 @@ def register_json_tools(client: discord.Client, guild: discord.Object):
         guild=guild
     )
     async def clear_feedback(interaction: discord.Interaction):
-        if not any(role.name.lower() == "staff" for role in interaction.user.roles):
-            await interaction.response.send_message("❌ You don't have permission.", ephemeral=True)
+        if not any(role.name == "TA" for role in interaction.user.roles):
+            await interaction.response.send_message("❌ ไม่มีสิทธิ์ในการใช้คำสั่ง", ephemeral=True)
             return
 
         data_store.save_schedules([])
-        await interaction.response.send_message("✅ All Feedback schedules cleared!", ephemeral=True)
+        await interaction.response.send_message("✅ ลบรอบ feed back ทั้งหมดเสร็จสิ้น", ephemeral=True)
 
     # ===== Clear specific Feedback schedule by link =====
     @client.tree.command(
@@ -111,8 +111,8 @@ def register_json_tools(client: discord.Client, guild: discord.Object):
     )
     @app_commands.describe(link="Exact link to delete")
     async def clear_feedback_link(interaction: discord.Interaction, link: str):
-        if not any(role.name.lower() == "staff" for role in interaction.user.roles):
-            await interaction.response.send_message("❌ You don't have permission.", ephemeral=True)
+        if not any(role.name == "TA" for role in interaction.user.roles):
+            await interaction.response.send_message("❌ ไม่มีสิทธิ์ในการใช้คำสั่ง", ephemeral=True)
             return
 
         schedules = data_store.load_schedules()
@@ -120,8 +120,8 @@ def register_json_tools(client: discord.Client, guild: discord.Object):
         new_schedules = [item for item in schedules if item["message"].lower() != link.lower()]
 
         if len(new_schedules) == len(schedules):
-            await interaction.response.send_message(f"⚠️ No feedback schedule found with link `{link}`", ephemeral=True)
+            await interaction.response.send_message(f"⚠️ ไม่พบตาราง feed back ที่ลิ้งค์ `{link}`", ephemeral=True)
             return
 
         data_store.save_schedules(new_schedules)
-        await interaction.response.send_message(f"✅ Feedback schedule with link `{link}` deleted.", ephemeral=True)
+        await interaction.response.send_message(f"✅ ตาราง feed back ที่ลิ้งค์ `{link}` ได้ถูกลบ", ephemeral=True)

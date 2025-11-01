@@ -12,10 +12,6 @@ GLOBAL_DF = None  # cache
 THAI_TZ = pytz.timezone("Asia/Bangkok")  # Thailand timezone
 
 
-async def show_ijudge(interaction: discord.Interaction):
-    if not any(role.name.lower() == "staff" for role in interaction.user.roles):
-        await interaction.response.send_message("❌ You don't have permission.", ephemeral=True)
-        return
 # --- Load CSV once ---
 
 
@@ -60,6 +56,9 @@ def find_pair(df, target):
 def register_pair(bot: discord.Client, guild: discord.Object):
     @bot.tree.command(name="pair", description="Check your PSCP weekly pair info", guild=guild)
     async def pair_cmd(interaction: discord.Interaction):
+        if not any(role.name == "TA" for role in interaction.user.roles):
+            await interaction.response.send_message("❌ ไม่มีสิทธิ์ในการใช้คำสั่ง", ephemeral=True)
+            return
         df = load_csv()
         await interaction.response.defer(ephemeral=True)
         discord_name = interaction.user.display_name.strip()
@@ -183,4 +182,4 @@ def register_dmpair(bot: discord.Client, guild: discord.Object):
     async def dmpair_cmd(interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
         await send_weekly_dm(interaction.client)
-        await interaction.followup.send("✅ Sent test DM! (check your inbox)", ephemeral=True)
+        await interaction.followup.send("✅ ส่ง DM เสร็จสิ้น! (check your inbox)", ephemeral=True)

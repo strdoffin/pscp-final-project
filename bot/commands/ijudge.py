@@ -22,17 +22,16 @@ def register_ijudge_link(client: discord.Client, guild: discord.Object):
         hour: int, 
         minute: int
     ):
-        if not any(role.name.lower() == "staff" for role in interaction.user.roles):
-            await interaction.response.send_message("❌ You don't have permission.", ephemeral=True)
+        if not any(role.name == "TA" for role in interaction.user.roles):
+            await interaction.response.send_message("❌ ไม่มีสิทธิ์ในการใช้คำสั่ง", ephemeral=True)
             return
 
-        # Validate date
         try:
             dt = datetime.strptime(date, "%Y-%m-%d")
             if not (0 <= hour <= 23 and 0 <= minute <= 59):
                 raise ValueError
         except ValueError:
-            await interaction.response.send_message("❌ Invalid date/time format.", ephemeral=True)
+            await interaction.response.send_message("❌ รูปแบบข้อมูลวันเวลาไม่ถูกต้อง", ephemeral=True)
             return
 
         links = data_store.load_links()
@@ -47,6 +46,6 @@ def register_ijudge_link(client: discord.Client, guild: discord.Object):
         data_store.save_links(links)
 
         await interaction.response.send_message(
-            f"✅ Added iJudge round `{round}` at `{dt.year}-{dt.month:02d}-{dt.day:02d} {hour:02d}:{minute:02d}` (Thailand)",
+            f"✅ เพิ่ม iJudge รอบที่ `{round}` เวลา `{dt.year}-{dt.month:02d}-{dt.day:02d} {hour:02d}:{minute:02d}` (Thailand)",
             ephemeral=True
         )

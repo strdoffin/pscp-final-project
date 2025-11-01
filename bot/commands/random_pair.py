@@ -143,15 +143,17 @@ def register_random_command(bot: commands.Bot, guild: discord.Object):
 
     @bot.tree.command(name="random_pair", description="random pair save in csv", guild=guild)
     async def pair(interaction: discord.Interaction):
+        if not any(role.name == "TA" for role in interaction.user.roles):
+            await interaction.response.send_message("❌ ไม่มีสิทธิ์ในการใช้คำสั่ง", ephemeral=True)
+            return
         try:
             await interaction.response.defer()
             loop = asyncio.get_running_loop()
             file_path = await loop.run_in_executor(None, generate_pair_csv)
 
             file = discord.File(file_path, filename="random_pairs.csv")
-            await interaction.followup.send("✅ สุ่มจับคู่เสร็จสมบูรณ์! ตรวจสอบไฟล์ CSV ด้านล่างครับ", file=file)
+            await interaction.followup.send("✅ สุ่มจับคู่เสร็จสมบูรณ์! ตรวจสอบไฟล์ CSV ด้านล่างครับ", file=file , ephemeral=True)
         except Exception as e:
             print(f"เกิดข้อผิดพลาดใน command /pair: {e}")
-            await interaction.followup.send(f"เกิดข้อผิดพลาด: {e}")
-
-    print("✅ 'pair' command registered.")
+            await interaction.followup.send(f"เกิดข้อผิดพลาด: {e}", ephemeral=True)
+        print("✅ 'pair' command registered.")
