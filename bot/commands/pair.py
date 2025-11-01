@@ -7,7 +7,7 @@ import asyncio
 import pytz  # for timezone
 
 # --- Config ---
-LOCAL_CSV = r"data\pair_data.csv"
+LOCAL_CSV = r"data/pair_data.csv"
 GLOBAL_DF = None  # cache
 THAI_TZ = pytz.timezone("Asia/Bangkok")  # Thailand timezone
 

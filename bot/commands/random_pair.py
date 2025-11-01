@@ -12,33 +12,131 @@ SHEET_ID = "1ydK3l7Lks3p57Tmvxrhk3dqu5dVcOmNgBetvVrWnNyk"
 SHEET_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=1740081435"
 csv_path = "data/random_pairs.csv"
 
+# สำหรับเปลี่ยน Column ข้อมูล
+COLUMN_MAPPING = {
+    "USERNAME": 0,  # B
+    "FULLNAME": 1,  # C
+    "SEC": 2,        # H
+}
+
 # --- Function: read data from Google Sheet ---
+
+
 def fetch_student_list():
     """
     Read ID (col A), Name (col B), and Group (col C) from Google Sheet
     """
+
     try:
+        all_students = []
         df = pd.read_csv(SHEET_URL)
+        data = df.dropna().values.tolist()
 
-        # Assume: Column A=ID, B=Name, C=Group
-        id_col = df.columns[0]
-        name_col = df.columns[1]
-        group_col = df.columns[2]
+        for row in data[1:]:  # ข้าม header
+            username = str(row[COLUMN_MAPPING["USERNAME"]])
+            fullname = str(row[COLUMN_MAPPING["FULLNAME"]])
+            sec = int(row[COLUMN_MAPPING["SEC"]])
 
-        # Clean and ensure valid data
-        df = df.dropna(subset=[id_col, name_col])
-        df[id_col] = df[id_col].astype(str)
-        df[name_col] = df[name_col].astype(str)
-        df[group_col] = df[group_col].astype(str)
-
-        return df[[id_col, name_col, group_col]]
-
+            if username and not pd.isna(sec):
+                all_students.append({
+                    "username": username,
+                    "fullname": fullname,
+                    "sec": sec
+                })
+        return all_students
     except Exception as e:
         print(f"เกิดข้อผิดพลาดในการอ่าน Google Sheet: {e}")
         return None
 
+# --- แบ่งกลุ่มตาม section ---
+
+
+def group_students(students, sections):
+    """
+    แบ่งรายชื่อออกเป็นตามกลุ่ม
+    """
+
+    groups = dict([(g,[]) for g in sections])
+
+    for s in students:
+        if str(s['sec']) in groups.keys():
+            groups.get(str(s['sec'])).append(s)
+
+    return groups
+
+
+# --- สุ่มจับคู่ภายในกลุ่ม ---
+def pair_students_in_group(student_group, group_name):
+    """
+    สุ่มจับคู่ Pair ตาม Section
+    """
+    random.shuffle(student_group)
+    pairs = []
+
+    for i in range(0, len(student_group), 2):
+        a = student_group[i]
+        if i + 1 < len(student_group):
+            b = student_group[i + 1]
+            pairs.append([
+                group_name,
+                a["username"], a["fullname"], a["sec"],
+                b["username"], b["fullname"], b["sec"]
+            ])
+        else:
+            pairs.append([
+                group_name,
+                a["username"], a["fullname"], a["sec"],
+                "UNPAIRED", "UNPAIRED", "", ""
+            ])
+    return pairs
+
+
+# --- รวมและบันทึก CSV ---
+
+
+def generate_pair_csv():
+    """
+    ฟังชั่นสำหรับ สุ่มคู่ Pair และ บันทึก CSV
+    """
+    students = fetch_student_list()
+    if not students:
+        raise ValueError("ไม่พบข้อมูลนักเรียนในชีตที่กำหนด")
+
+    sections = set()
+
+    for student in students:
+        sections.add(str(student["sec"]))
+
+    groups = group_students(students, sections)
+
+    all_pairs = []
+
+    for section in sections:
+        all_pairs += pair_students_in_group(groups[section], "Section " + section)
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    headers = [
+        "Group",
+        "Partner1 Username", "Partner1 Name", "Partner1 Sec",
+        "Partner2 Username", "Partner2 Name", "Partner2 Sec",
+    ]
+    writer.writerow(headers)
+    writer.writerows(all_pairs)
+    output.seek(0)
+
+    # Save to file
+    with open(csv_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(headers)
+        writer.writerows(all_pairs)
+
+    return csv_path
+
 
 # --- Register /pair command ---
+
+
 def register_random_command(bot: commands.Bot, guild: discord.Object):
     """
     Register slash command /pair for random pairing with group column
@@ -48,48 +146,11 @@ def register_random_command(bot: commands.Bot, guild: discord.Object):
     async def pair(interaction: discord.Interaction):
         try:
             await interaction.response.defer()
-
             loop = asyncio.get_running_loop()
-            df = await loop.run_in_executor(None, fetch_student_list)
+            file_path = await loop.run_in_executor(None, generate_pair_csv)
 
-            if df is None or df.empty:
-                await interaction.followup.send("❌ ไม่สามารถดึงข้อมูลจาก Google Sheet ได้ครับ")
-                return
-
-            # Shuffle all rows
-            shuffled = df.sample(frac=1).reset_index(drop=True)
-
-            # Build pairs and keep Column C (Group)
-            pairs = []
-            for i in range(0, len(shuffled) - 1, 2):
-                a = shuffled.iloc[i]
-                b = shuffled.iloc[i + 1]
-                group_value = a[2]  # Column C
-                pairs.append((a[0], a[1], b[0], b[1], group_value))
-
-            # If odd number of students
-            if len(shuffled) % 2 != 0:
-                last = shuffled.iloc[-1]
-                pairs.append((last[0], last[1], "-", "ไม่มีคู่", last[2]))
-
-            # Create CSV in memory
-            output = io.StringIO()
-            writer = csv.writer(output)
-            writer.writerow(["ID1", "Name1", "ID2", "Name2", "Group"])
-            for row in pairs:
-                writer.writerow(row)
-            output.seek(0)
-
-            with open(csv_path, "w", newline="", encoding="utf-8") as f:
-                writer = csv.writer(f)
-                writer.writerow(["ID1", "Name1", "ID2", "Name2", "Group"])
-                for row in pairs:
-                    writer.writerow(row)
-
-            # Send the saved CSV file to Discord
-            csv_file = discord.File(csv_path, filename="random_pairs.csv")
-            await interaction.followup.send("✅ สุ่มจับคู่เสร็จแล้วครับ!", file=csv_file)
-
+            file = discord.File(file_path, filename="random_pairs.csv")
+            await interaction.followup.send("✅ สุ่มจับคู่เสร็จสมบูรณ์! ตรวจสอบไฟล์ CSV ด้านล่างครับ", file=file)
         except Exception as e:
             print(f"เกิดข้อผิดพลาดใน command /pair: {e}")
             await interaction.followup.send(f"เกิดข้อผิดพลาด: {e}")
