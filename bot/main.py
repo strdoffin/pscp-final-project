@@ -12,6 +12,7 @@ from bot.commands.random_pair import register_random_command
 from bot.commands.ijudge import register_ijudge_link
 from bot.commands.test_command import register_test_commands
 from bot.commands.jsontools import register_json_tools
+from bot.commands.help import register_help_command
 
 from dotenv import load_dotenv
 import os
@@ -42,6 +43,7 @@ def run_bot():
     register_score_command(bot, guild)
     register_random_command(bot, guild)
     register_json_tools(bot, guild)
+    register_help_command(bot, guild)
 
     send_noti_task = register_notification(bot,guild)
 
