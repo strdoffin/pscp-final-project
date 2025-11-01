@@ -14,17 +14,23 @@ def register_json_tools(client: discord.Client, guild: discord.Object):
             await interaction.response.send_message("❌ You don't have permission.", ephemeral=True)
             return
 
-        links = data_store.load_links()
-        if not links:
-            await interaction.response.send_message("ℹ️ No iJudge rounds found.", ephemeral=True)
+        schedules = data_store.load_links()
+        if not schedules:
+            await interaction.response.send_message("No ijudge rounds found.", ephemeral=True)
             return
 
-        msg = "📋 **iJudge Rounds:**\n"
-        for idx, item in enumerate(links, 1):
-            msg += f"{idx}. `{item['round']}` at `{item['datetime']}`\n"
+        msg = "📋 **Ijudge Rounds:**\n"
+        for idx, item in enumerate(schedules, 1):
+            label = item.get("message") or item.get("link") or item.get("round", "Unknown")
+            year = item.get("year", "????")
+            month = item.get("month", "??")
+            day = item.get("day", "??")
+            hour = item.get("hour", 0)
+            minute = item.get("minute", 0)
+
+            msg += f"{idx}. `round : {label}` at `{year}-{month:02d}-{day:02d} {hour:02d}:{minute:02d}`\n"
 
         await interaction.response.send_message(msg, ephemeral=True)
-
     # ===== Clear all iJudge entries =====
     @client.tree.command(
         name="clearijudge",

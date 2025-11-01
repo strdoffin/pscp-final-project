@@ -7,16 +7,14 @@ from bot.commands.notification import register_notification
 from bot.commands.pair import register_pair, register_dmpair, weekly_dm_scheduler
 from bot.commands.notification import register_notification
 from bot.commands.ijudge import register_ijudge_link
-from bot.commands.score import register_score_command  # ⬇️ 1. เพิ่ม import นี้
+from bot.commands.score import register_score_command
 from bot.commands.random_pair import register_random_command
 from bot.commands.ijudge import register_ijudge_link
 from bot.commands.test_command import register_test_commands
 from bot.commands.jsontools import register_json_tools
-from bot.commands.help import register_help_command
 
 from dotenv import load_dotenv
 import os
-
 
 def run_bot():
     """Starting Discord Bot"""
@@ -25,13 +23,12 @@ def run_bot():
     token = os.getenv('DISCORD_TOKEN')
     guild_id = int(os.getenv('GUILD_ID'))
 
-    handler = logging.FileHandler(
-        filename='discord.log', encoding='utf-8', mode='w')
+    handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
 
     intents = discord.Intents.default()
     intents.message_content = True
     intents.members = True
-    intents.dm_messages = True
+    intents.dm_messages = True 
 
     guild = discord.Object(id=guild_id)
     bot = commands.Bot(command_prefix='!', intents=intents)
@@ -42,11 +39,11 @@ def run_bot():
     register_tong(bot, guild)
     register_pair(bot, guild)
     register_dmpair(bot, guild)
-    register_score_command(bot, guild)  # ⬇️ 2. เพิ่มการ register คำสั่งนี้
+    register_score_command(bot, guild)
     register_random_command(bot, guild)
-    register_help_command(bot, guild)
-    send_noti_task = register_notification(bot, guild)
     register_json_tools(bot, guild)
+
+    send_noti_task = register_notification(bot,guild)
 
     @bot.event
     async def on_ready():
@@ -67,6 +64,8 @@ def run_bot():
         try:
             synced = await bot.tree.sync(guild=guild)
             print(f'Synced {len(synced)} command(s) to guild {guild_id}')
+            for cmd in synced:
+                print(f" - /{cmd.name}")
         except Exception as e:
             print("Error syncing commands:", e)
 
