@@ -7,15 +7,18 @@ import asyncio
 import pytz  # for timezone
 
 # --- Config ---
-LOCAL_CSV = r"data/pair_data.csv"
+LOCAL_CSV = r"data/random_pairs.csv"
 GLOBAL_DF = None  # cache
 THAI_TZ = pytz.timezone("Asia/Bangkok")  # Thailand timezone
+
 
 async def show_ijudge(interaction: discord.Interaction):
     if not any(role.name.lower() == "staff" for role in interaction.user.roles):
         await interaction.response.send_message("❌ You don't have permission.", ephemeral=True)
         return
 # --- Load CSV once ---
+
+
 def load_csv():
     global GLOBAL_DF
     if GLOBAL_DF is not None:
@@ -42,7 +45,7 @@ def find_pair(df, target):
         name2, user2 = row["Partner 2 (Name)"], row["Partner 2 (Username)"]
         section = row["Group"]
 
-        if target in [name1, user1, name2, user2, user1.replace("it",""), user2.replace("it","")]:
+        if target in [name1, user1, name2, user2, user1.replace("it", ""), user2.replace("it", "")]:
             return {
                 "section": section,
                 "p1_name": name1,
@@ -70,16 +73,33 @@ def register_pair(bot: discord.Client, guild: discord.Object):
                 break
 
         if result:
-            msg = (
-                f"👥 **Pair info for {discord_name}**\n"
-                f"📘 Section: {result['section']}\n"
-                f"- {result['p1_name']} ({result['p1_user']})\n"
-                f"- {result['p2_name']} ({result['p2_user']})"
+            embed = discord.Embed(
+                title=f"👥 **Pair info for {discord_name}**",
+                description=f"📘 Section: {result['section']}",
+                color=discord.Color.green()
             )
-        else:
-            msg = f"❌ No pair found for **{discord_name}**"
 
-        await interaction.followup.send(msg, ephemeral=True)
+            embed.add_field(
+                name="Partner 1",
+                value=f"```{result['p1_name']} ({result['p1_user']})```",
+                inline=False
+            )
+
+            embed.add_field(
+                name="Partner 2",
+                value=f"```{result['p2_name']} ({result['p2_user']})```",
+                inline=False
+            )
+
+            await interaction.followup.send(embed=embed, ephemeral=True)
+        else:
+            embed = discord.Embed(
+                title="👥 **Pair information**",
+                description=f"❌ No pair found for **{discord_name}**",
+                color=discord.Color.red()
+            )
+
+            await interaction.followup.send(embed=embed, ephemeral=True)
 
     print("✅ /pair command registered")
 
@@ -103,14 +123,26 @@ async def send_weekly_dm(bot):
                     break
 
             if found_pair:
-                msg = (
-                    f"👥 **Weekly Pair Reminder!**\n"
-                    f"📘 Section: {found_pair['section']}\n"
-                    f"- {found_pair['p1_name']} ({found_pair['p1_user']})\n"
-                    f"- {found_pair['p2_name']} ({found_pair['p2_user']})"
+                embed = discord.Embed(
+                    title="👥 **Weekly Pair Reminder!**",
+                    description=f"📘 Section: {found_pair['section']}",
+                    color=discord.Color.blue()
                 )
+
+                embed.add_field(
+                    name="Partner 1",
+                    value=f"```{found_pair['p1_name']} ({found_pair['p1_user']})```",
+                    inline=False
+                )
+
+                embed.add_field(
+                    name="Partner 2",
+                    value=f"```{found_pair['p2_name']} ({found_pair['p2_user']})```",
+                    inline=False
+                )
+
                 try:
-                    await member.send(msg)
+                    await member.send(embed=embed)
                     print(f"✅ Sent DM to {member.display_name}")
                 except Exception as e:
                     print(f"⚠️ Failed to DM {member.display_name}: {e}")
@@ -145,6 +177,8 @@ async def weekly_dm_scheduler(bot):
         print("✅ Weekly DMs sent!")
 
 # --- /dmpair command for testing ---
+
+
 def register_dmpair(bot: discord.Client, guild: discord.Object):
     @bot.tree.command(name="dmpair", description="Send test pair info via DM", guild=guild)
     async def dmpair_cmd(interaction: discord.Interaction):

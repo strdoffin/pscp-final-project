@@ -56,7 +56,7 @@ def group_students(students, sections):
     แบ่งรายชื่อออกเป็นตามกลุ่ม
     """
 
-    groups = dict([(g,[]) for g in sections])
+    groups = dict([(g, []) for g in sections])
 
     for s in students:
         if str(s['sec']) in groups.keys():
@@ -79,14 +79,14 @@ def pair_students_in_group(student_group, group_name):
             b = student_group[i + 1]
             pairs.append([
                 group_name,
-                a["username"], a["fullname"], a["sec"],
-                b["username"], b["fullname"], b["sec"]
+                a["fullname"], a["username"], a["sec"],
+                b["fullname"], b["username"], b["sec"]
             ])
         else:
             pairs.append([
                 group_name,
-                a["username"], a["fullname"], a["sec"],
-                "UNPAIRED", "UNPAIRED", "", ""
+                a["fullname"], a["username"], a["sec"],
+                "UNPAIRED", "UNPAIRED", ""
             ])
     return pairs
 
@@ -111,15 +111,16 @@ def generate_pair_csv():
 
     all_pairs = []
 
-    for section in sections:
-        all_pairs += pair_students_in_group(groups[section], "Section " + section)
+    for section in sorted(sections):
+        all_pairs += pair_students_in_group(
+            groups[section], "Section " + section)
 
     output = io.StringIO()
     writer = csv.writer(output)
     headers = [
         "Group",
-        "Partner1 Username", "Partner1 Name", "Partner1 Sec",
-        "Partner2 Username", "Partner2 Name", "Partner2 Sec",
+        "Partner 1 (Username)", "Partner 1 (Name)", "Partner 1 (Sec)",
+        "Partner 2 (Username)", "Partner 2 (Name)", "Partner 2 (Sec)",
     ]
     writer.writerow(headers)
     writer.writerows(all_pairs)
@@ -132,7 +133,6 @@ def generate_pair_csv():
         writer.writerows(all_pairs)
 
     return csv_path
-
 
 # --- Register /pair command ---
 
