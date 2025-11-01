@@ -4,7 +4,6 @@ import asyncio
 import random
 import csv
 import io
-from discord import app_commands
 from discord.ext import commands
 
 # --- Google Sheet settings ---

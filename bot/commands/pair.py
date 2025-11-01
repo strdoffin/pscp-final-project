@@ -58,10 +58,9 @@ def find_pair(df, target):
 
 # --- /pair command ---
 def register_pair(bot: discord.Client, guild: discord.Object):
-    df = load_csv()
-
     @bot.tree.command(name="pair", description="Check your PSCP weekly pair info", guild=guild)
     async def pair_cmd(interaction: discord.Interaction):
+        df = load_csv()
         await interaction.response.defer(ephemeral=True)
         discord_name = interaction.user.display_name.strip()
         parts = [p.strip() for p in discord_name.split("|")]
