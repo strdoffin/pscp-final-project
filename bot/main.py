@@ -7,7 +7,7 @@ from bot.commands.notification import register_notification
 from bot.commands.pair import register_pair, register_dmpair, weekly_dm_scheduler
 from bot.commands.notification import register_notification
 from bot.commands.ijudge import register_ijudge_link
-from bot.commands.score import register_score_command  # ⬇️ 1. เพิ่ม import นี้
+from bot.commands.score import register_score_command
 from bot.commands.random_pair import register_random_command
 from bot.commands.ijudge import register_ijudge_link
 from bot.commands.test_command import register_test_commands
