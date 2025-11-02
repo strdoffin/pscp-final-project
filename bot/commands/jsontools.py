@@ -45,27 +45,28 @@ def register_json_tools(client: discord.Client, guild: discord.Object):
         data_store.save_links([])
         await interaction.response.send_message("✅ ลบรอบทั้งหมดเสร็จสิ้น", ephemeral=True)
 
-    # ===== Clear specific iJudge entry =====
+    # ===== Clear specific iJudge entry by index =====
     @client.tree.command(
-        name="clearijudge_round",
-        description="Clear a specific iJudge round by name",
+        name="clearijudge_index",
+        description="Clear a specific iJudge round by index",
         guild=guild
     )
-    @app_commands.describe(round="Round name to delete")
-    async def clear_ijudge_round(interaction: discord.Interaction, round: str):
+    @app_commands.describe(index="Index number of the round to delete (from /showijudge)")
+    async def clear_ijudge_index(interaction: discord.Interaction, index: int):
         if not any(role.name == "TA" for role in interaction.user.roles):
             await interaction.response.send_message("❌ ไม่มีสิทธิ์ในการใช้คำสั่ง", ephemeral=True)
             return
 
         links = data_store.load_links()
-        new_links = [item for item in links if item["round"].lower() != round.lower()]
-
-        if len(new_links) == len(links):
-            await interaction.response.send_message(f"⚠️ ไม่พบรอบที่ `{round}`", ephemeral=True)
+        if index < 1 or index > len(links):
+            await interaction.response.send_message("⚠️ หมายเลขรอบไม่ถูกต้อง", ephemeral=True)
             return
 
-        data_store.save_links(new_links)
-        await interaction.response.send_message(f"✅ รอบที่ `{round}` ถูกลบออกจาก iJudge list.", ephemeral=True)
+        removed = links.pop(index - 1)
+        data_store.save_links(links)
+
+        label = removed.get("round") or removed.get("message") or "Unknown"
+        await interaction.response.send_message(f"✅ ลบรอบที่ `{label}` (index {index}) ออกจาก iJudge list แล้ว", ephemeral=True)
 
     # ===== Show Feedback schedules =====
     @client.tree.command(
@@ -103,25 +104,25 @@ def register_json_tools(client: discord.Client, guild: discord.Object):
         data_store.save_schedules([])
         await interaction.response.send_message("✅ ลบรอบ feed back ทั้งหมดเสร็จสิ้น", ephemeral=True)
 
-    # ===== Clear specific Feedback schedule by link =====
+    # ===== Clear specific Feedback schedule by index =====
     @client.tree.command(
-        name="clearfeedback_link",
-        description="Clear a specific Feedback schedule by link",
+        name="clearfeedback_index",
+        description="Clear a specific Feedback schedule by index",
         guild=guild
     )
-    @app_commands.describe(link="Exact link to delete")
-    async def clear_feedback_link(interaction: discord.Interaction, link: str):
+    @app_commands.describe(index="Index number of the feedback schedule to delete (from /showfeedback)")
+    async def clear_feedback_index(interaction: discord.Interaction, index: int):
         if not any(role.name == "TA" for role in interaction.user.roles):
             await interaction.response.send_message("❌ ไม่มีสิทธิ์ในการใช้คำสั่ง", ephemeral=True)
             return
 
         schedules = data_store.load_schedules()
-        # compare with the 'message' field which now stores the link
-        new_schedules = [item for item in schedules if item["message"].lower() != link.lower()]
-
-        if len(new_schedules) == len(schedules):
-            await interaction.response.send_message(f"⚠️ ไม่พบตาราง feed back ที่ลิ้งค์ `{link}`", ephemeral=True)
+        if index < 1 or index > len(schedules):
+            await interaction.response.send_message("⚠️ หมายเลขตาราง feedback ไม่ถูกต้อง", ephemeral=True)
             return
 
-        data_store.save_schedules(new_schedules)
-        await interaction.response.send_message(f"✅ ตาราง feed back ที่ลิ้งค์ `{link}` ได้ถูกลบ", ephemeral=True)
+        removed = schedules.pop(index - 1)
+        data_store.save_schedules(schedules)
+
+        msg = removed.get("message") or "Unknown link"
+        await interaction.response.send_message(f"✅ ตาราง feedback ที่ `{msg}` (index {index}) ถูกลบเรียบร้อยแล้ว", ephemeral=True)
