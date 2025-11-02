@@ -1,21 +1,20 @@
 import os
+import asyncio
+import datetime
 import pandas as pd
 import discord
 from discord.ext import tasks
-import datetime
-import asyncio
-import pytz  # for timezone
+import pytz  # For timezone handling
 
 # --- Config ---
 LOCAL_CSV = r"data/random_pairs.csv"
-GLOBAL_DF = None  # cache
+GLOBAL_DF = None  # Cache for loaded CSV
 THAI_TZ = pytz.timezone("Asia/Bangkok")  # Thailand timezone
 
 
-# --- Load CSV once ---
-
-
+# --- Load CSV ---
 def load_csv():
+    """Load and cache the CSV file containing pairing data."""
     global GLOBAL_DF
     if GLOBAL_DF is not None:
         return GLOBAL_DF
@@ -24,8 +23,13 @@ def load_csv():
         raise FileNotFoundError(f"CSV file not found: {LOCAL_CSV}")
 
     df = pd.read_csv(LOCAL_CSV)
-    for col in ["Partner 1 (Name)", "Partner 1 (Username)",
-                "Partner 2 (Name)", "Partner 2 (Username)", "Group"]:
+    for col in [
+        "Partner 1 (Name)",
+        "Partner 1 (Username)",
+        "Partner 2 (Name)",
+        "Partner 2 (Username)",
+        "Group",
+    ]:
         if col in df.columns:
             df[col] = df[col].astype(str).str.strip()
 
@@ -35,32 +39,50 @@ def load_csv():
 
 
 # --- Find Pair ---
-def find_pair(df, target):
+def find_pair(df: pd.DataFrame, target: str):
+    """Find pairing info for a given name or username."""
     for _, row in df.iterrows():
         name1, user1 = row["Partner 1 (Name)"], row["Partner 1 (Username)"]
         name2, user2 = row["Partner 2 (Name)"], row["Partner 2 (Username)"]
         section = row["Group"]
 
-        if target in [name1, user1, name2, user2, user1.replace("it", ""), user2.replace("it", "")]:
+        if target in [
+            name1,
+            user1,
+            name2,
+            user2,
+            user1.replace("it", ""),
+            user2.replace("it", ""),
+        ]:
             return {
                 "section": section,
                 "p1_name": name1,
                 "p1_user": user1,
                 "p2_name": name2,
-                "p2_user": user2
+                "p2_user": user2,
             }
     return None
 
 
 # --- /pair command ---
 def register_pair(bot: discord.Client, guild: discord.Object):
-    @bot.tree.command(name="pair", description="Check your PSCP weekly pair info", guild=guild)
+    """Register the /pair command to check pair info."""
+
+    @bot.tree.command(
+        name="pair",
+        description="Check your PSCP weekly pair info",
+        guild=guild,
+    )
     async def pair_cmd(interaction: discord.Interaction):
         if not any(role.name == "TA" for role in interaction.user.roles):
-            await interaction.response.send_message("❌ ไม่มีสิทธิ์ในการใช้คำสั่ง", ephemeral=True)
+            await interaction.response.send_message(
+                "❌ ไม่มีสิทธิ์ในการใช้คำสั่ง", ephemeral=True
+            )
             return
+
         df = load_csv()
         await interaction.response.defer(ephemeral=True)
+
         discord_name = interaction.user.display_name.strip()
         parts = [p.strip() for p in discord_name.split("|")]
 
@@ -74,19 +96,17 @@ def register_pair(bot: discord.Client, guild: discord.Object):
             embed = discord.Embed(
                 title=f"👥 **Pair info for {discord_name}**",
                 description=f"📘 Section: {result['section']}",
-                color=discord.Color.green()
+                color=discord.Color.green(),
             )
-
             embed.add_field(
                 name="Partner 1",
                 value=f"```{result['p1_name']} ({result['p1_user']})```",
-                inline=False
+                inline=False,
             )
-
             embed.add_field(
                 name="Partner 2",
                 value=f"```{result['p2_name']} ({result['p2_user']})```",
-                inline=False
+                inline=False,
             )
 
             await interaction.followup.send(embed=embed, ephemeral=True)
@@ -94,16 +114,16 @@ def register_pair(bot: discord.Client, guild: discord.Object):
             embed = discord.Embed(
                 title="👥 **Pair information**",
                 description=f"❌ No pair found for **{discord_name}**",
-                color=discord.Color.red()
+                color=discord.Color.red(),
             )
-
             await interaction.followup.send(embed=embed, ephemeral=True)
 
     print("✅ /pair command registered")
 
 
-# --- DM sending ---
-async def send_weekly_dm(bot):
+# --- DM Sending ---
+async def send_weekly_dm(bot: discord.Client):
+    """Send weekly pair info via DM to all guild members."""
     df = load_csv()
 
     for guild in bot.guilds:
@@ -124,19 +144,19 @@ async def send_weekly_dm(bot):
                 embed = discord.Embed(
                     title="👥 **Weekly Pair Reminder!**",
                     description=f"📘 Section: {found_pair['section']}",
-                    color=discord.Color.blue()
+                    color=discord.Color.blue(),
                 )
-
                 embed.add_field(
                     name="Partner 1",
-                    value=f"```{found_pair['p1_name']} ({found_pair['p1_user']})```",
-                    inline=False
+                    value=f"```{found_pair['p1_name']} "
+                    f"({found_pair['p1_user']})```",
+                    inline=False,
                 )
-
                 embed.add_field(
                     name="Partner 2",
-                    value=f"```{found_pair['p2_name']} ({found_pair['p2_user']})```",
-                    inline=False
+                    value=f"```{found_pair['p2_name']} "
+                    f"({found_pair['p2_user']})```",
+                    inline=False,
                 )
 
                 try:
@@ -148,14 +168,19 @@ async def send_weekly_dm(bot):
                 print(f"⚠️ No pair found for {display_name}")
 
 
-async def weekly_dm_scheduler(bot):
+# --- Weekly Scheduler ---
+async def weekly_dm_scheduler(bot: discord.Client):
+    """Schedule weekly DM sending every Friday at 08:42 (Thai time)."""
     while True:
         now = datetime.datetime.now(THAI_TZ)
 
-        # Calculate next Friday 08:42
+        # Calculate next Friday at 08:42
         days_ahead = 4 - now.weekday()  # Friday == 4
-        if days_ahead < 0 or (days_ahead == 0 and (now.hour > 8 or (now.hour == 8 and now.minute >= 42))):
+        if days_ahead < 0 or (
+            days_ahead == 0 and (now.hour > 8 or (now.hour == 8 and now.minute >= 42))
+        ):
             days_ahead += 7
+
         next_friday = datetime.datetime(
             year=now.year,
             month=now.month,
@@ -163,7 +188,7 @@ async def weekly_dm_scheduler(bot):
             hour=8,
             minute=42,
             second=0,
-            tzinfo=THAI_TZ
+            tzinfo=THAI_TZ,
         ) + datetime.timedelta(days=days_ahead)
 
         delay = (next_friday - now).total_seconds()
@@ -174,12 +199,19 @@ async def weekly_dm_scheduler(bot):
         await send_weekly_dm(bot)
         print("✅ Weekly DMs sent!")
 
-# --- /dmpair command for testing ---
 
-
+# --- /dmpair test command ---
 def register_dmpair(bot: discord.Client, guild: discord.Object):
-    @bot.tree.command(name="dmpair", description="Send test pair info via DM", guild=guild)
+    """Register the /dmpair command to test sending DM pairs manually."""
+
+    @bot.tree.command(
+        name="dmpair",
+        description="Send test pair info via DM",
+        guild=guild,
+    )
     async def dmpair_cmd(interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
         await send_weekly_dm(interaction.client)
-        await interaction.followup.send("✅ ส่ง DM เสร็จสิ้น! (check your inbox)", ephemeral=True)
+        await interaction.followup.send(
+            "✅ ส่ง DM เสร็จสิ้น! (check your inbox)", ephemeral=True
+        )
