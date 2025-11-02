@@ -2,14 +2,11 @@ import discord
 from discord.ext import commands
 import logging
 from bot.commands.feedback import register_feedback_schedule
-from bot.commands.tong import register_tong
 from bot.commands.notification import register_notification
 from bot.commands.pair import register_pair, register_dmpair, weekly_dm_scheduler
-from bot.commands.notification import register_notification
 from bot.commands.ijudge import register_ijudge_link
 from bot.commands.score import register_score_command
 from bot.commands.random_pair import register_random_command
-from bot.commands.ijudge import register_ijudge_link
 from bot.commands.test_command import register_test_commands
 from bot.commands.jsontools import register_json_tools
 from bot.commands.help import register_help_command
@@ -37,7 +34,6 @@ def run_bot():
     # ✅ Register all commands
     register_ijudge_link(bot, guild)
     register_feedback_schedule(bot, guild)
-    register_tong(bot, guild)
     register_pair(bot, guild)
     register_dmpair(bot, guild)
     register_score_command(bot, guild)

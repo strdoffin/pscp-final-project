@@ -5,7 +5,7 @@ from datetime import datetime
 
 def register_feedback_schedule(client: discord.Client, guild: discord.Object):
     @client.tree.command(
-        name="feedback",
+        name="addfeedback",
         description="Add a new feedback notification",
         guild=guild
     )

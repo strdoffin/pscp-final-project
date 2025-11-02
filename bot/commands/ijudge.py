@@ -5,7 +5,7 @@ from datetime import datetime
 
 def register_ijudge_link(client: discord.Client, guild: discord.Object):
     @client.tree.command(
-        name="ijudge",
+        name="addijudge",
         description="Add iJudge round deadline (Thailand time)",
         guild=guild
     )
