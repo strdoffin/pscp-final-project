@@ -100,7 +100,7 @@ def register_score_command(bot: commands.Bot, guild: discord.Object):
             if not (student_id.isdigit() and len(student_id) == 8):
                 await interaction.followup.send(
                     f"❌ ไม่สามารถอ่านรหัสนักศึกษาจากชื่อเล่นของคุณได้\n"
-                    f"กรุณาตั้งชื่อเล่นให้ขึ้นต้นด้วยรหัสนักศึกษา (เช่น `68071234Guy`)\n\n"
+                    f"กรุณาตั้งชื่อเล่นให้ขึ้นต้นด้วยรหัสนักศึกษา (เช่น `68071234Name`)\n\n"
                     f"**ชื่อเล่นปัจจุบัน:** `{nickname}`"
                 )
                 return
@@ -169,4 +169,3 @@ def register_score_command(bot: commands.Bot, guild: discord.Object):
             print(f"เกิดข้อผิดพลาดใน command /score: {e}")
             await interaction.followup.send(f"เกิดข้อผิดพลาด: {e}")
 
-    print("✅ /score command registered (nickname-based).")
