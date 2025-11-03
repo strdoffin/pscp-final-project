@@ -1,4 +1,4 @@
-""" Registers the /addfeedback command """
+"""/addfeedback"""
 from datetime import datetime
 import discord
 from discord import app_commands

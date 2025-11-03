@@ -15,9 +15,6 @@ THAI_TZ = pytz.timezone("Asia/Bangkok")  # Thailand timezone
 # --- Load CSV ---
 def load_csv():
     """Load and cache the CSV file containing pairing data."""
-    global GLOBAL_DF
-    if GLOBAL_DF is not None:
-        return GLOBAL_DF
 
     if not os.path.exists(LOCAL_CSV):
         raise FileNotFoundError(f"CSV file not found: {LOCAL_CSV}")
@@ -33,7 +30,6 @@ def load_csv():
         if col in df.columns:
             df[col] = df[col].astype(str).str.strip()
 
-    GLOBAL_DF = df
     print(f"✅ Loaded CSV: {LOCAL_CSV}")
     return df
 
@@ -74,12 +70,6 @@ def register_pair(bot: discord.Client, guild: discord.Object):
         guild=guild,
     )
     async def pair_cmd(interaction: discord.Interaction):
-        if not any(role.name == "TA" for role in interaction.user.roles):
-            await interaction.response.send_message(
-                "❌ ไม่มีสิทธิ์ในการใช้คำสั่ง", ephemeral=True
-            )
-            return
-
         df = load_csv()
         await interaction.response.defer(ephemeral=True)
 

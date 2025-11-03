@@ -1,3 +1,4 @@
+"""/randompair"""
 import discord
 import pandas as pd
 import asyncio

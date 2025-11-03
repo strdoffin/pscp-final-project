@@ -5,29 +5,9 @@
         "args": []
     },
     {
-        "name": "/help",
-        "description": "แสดงรายการคำสั่งทั้งหมด",
-        "args": [
-            {
-                "name": "ชื่อคำสั่ง",
-                "description": "ชื่อคำสั่งที่ต้องการค้นหา"
-            }
-        ]
-    },
-    {
-        "name": "/pair",
-        "description": "ดูว่า Week นี้ เราคู่กับใคร",
+        "name": "/dmpair",
+        "description": "ส่ง คู่Pair หาทุกคน",
         "args": []
-    },
-    {
-        "name": "/help",
-        "description": "แสดงรายการคำสั่งทั้งหมด",
-        "args": [
-            {
-                "name": "command",
-                "description": "ชื่อคำสั่งที่ต้องการค้นหา"
-            }
-        ]
     },
     {
         "name": "/help",

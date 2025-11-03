@@ -1,8 +1,7 @@
-"""data_store for feedback and ijudge cmd"""
+"""data_store for feedback and ijudge command"""
 import json
 import os
 
-# ===== Constants =====
 # Directory to store JSON files
 DATA_DIR = "data"
 
@@ -14,7 +13,6 @@ SCHEDULES_FILE = os.path.join(DATA_DIR, "feedback_links.json")
 os.makedirs(DATA_DIR, exist_ok=True)
 
 
-# ===== Utility Functions =====
 def load_json(file_path: str) -> list:
     """
     Load JSON data from the specified file.

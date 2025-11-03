@@ -1,4 +1,4 @@
-"""Help Command Registration & Handling for PSCP Bot"""
+"""/help"""
 
 import json
 import math

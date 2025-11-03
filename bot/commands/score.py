@@ -1,4 +1,4 @@
-# bot/commands/score.py
+"""/score"""
 import discord
 import pandas as pd
 import asyncio
