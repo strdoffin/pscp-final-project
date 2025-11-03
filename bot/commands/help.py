@@ -96,7 +96,7 @@ def create_help_embed(page: int = 1, keyword: str | None = None) -> Embed:
             )
             desc += (
                 f"\n> 💡 **ตัวอย่างการใช้งาน**\n> "
-                f"`/{cmd['name']} {' '.join(args)}`\n"
+                f"`{cmd['name']} {' '.join(args)}`\n"
                 f"> **Arguments**\n{arg_info}"
             )
 

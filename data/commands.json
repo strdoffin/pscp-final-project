@@ -20,13 +20,102 @@
         ]
     },
     {
-        "name": "/help",
-        "description": "แสดงรายการคำสั่งทั้งหมด",
+        "name": "/addfeedback",
+        "description": "เพิ่มเวลาที่จะทำการแจ้งเตือน Feedback Form",
         "args": [
             {
-                "name": "command",
-                "description": "ชื่อคำสั่งที่ต้องการค้นหา"
+                "name": "date",
+                "description": "วัน-เดือน-ปี ที่ต้องการให้แจ้งเตือน"
+            },
+            {
+                "name": "hour",
+                "description": "เวลาที่ต้องการส่งเป็นชั่วโมงเช่น 6 โมงเย็นก็จะเท่ากับ 18"
+            },
+            {
+                "name": "minute",
+                "description": "เวลาที่ต้องการส่งเป็นนาที"
+            },
+            {
+                "name": "link",
+                "description": "แนบลิ้งค์ของ Feedback week นั้นๆ"  
             }
         ]
+    },
+    {
+        "name": "/addijudge",
+        "description": "เพิ่มเวลาที่จะทำการแจ้งเตือน deadline ijudge",
+        "args": [
+            {
+            "name": "round",
+            "description": "ระบุครั้งของ ijudge"
+            },
+            {
+                "name": "date",
+                "description": "วัน-เดือน-ปี ที่ต้องการให้แจ้งเตือน"
+            },
+            {
+                "name": "hour",
+                "description": "เวลาที่ต้องการส่งเป็นชั่วโมงเช่น 6 โมงเย็นก็จะเท่ากับ 18"
+            },
+            {
+                "name": "minute",
+                "description": "เวลาที่ต้องการส่งเป็นนาที"
+            }
+        ]
+    },
+    {
+        "name": "/clearfeedback",
+        "description": "ลบการแจ้งเตือน Feedback ทั้งหมด",
+        "args": []
+    },
+    {
+        "name": "/clearfeedback_index",
+        "description": "ลบการแจ้งเตือน Feedback ระบุตำแหน่ง",
+        "args": [
+            {
+                "name": "index",
+                "description": "ลำดับ link Feedback สามารถดูได้ใน /showfeedback"
+            }
+        ]
+    },
+    {
+        "name": "/clearijudge",
+        "description": "ลบการแจ้งเตือน ijudge ทั้งหมด",
+        "args": []
+    },
+    {
+        "name": "/clearijudge_index",
+        "description": "ลบการแจ้งเตือน ijudge ระบุตำแหน่ง",
+        "args": [
+            {
+                "name": "index",
+                "description": "ลำดับ รอบ สามารถดูได้ใน /showijudge"
+            }
+        ]
+    },
+    {
+        "name": "/random_pair",
+        "description": "ทำการสุ่มคู่ pair",
+        "args": []
+    },
+    {
+        "name": "/score",
+        "description": "ค้นหาคะแนนนักศึกษาด้วย รหัส นศ.",
+        "args": [
+            {
+                "name": "student_id",
+                "description": "ใส่รหัสนักศึกษา"
+            }
+        ]
+    },
+    {
+        "name": "/showfeedback",
+        "description": "แสดงการแจ้งเตือน Feedback ทั้งหมด",
+        "args": []
+    },
+    {
+        "name": "/showijudge",
+        "description": "แสดงการแจ้งเตือน ijudge ทั้งหมด",
+        "args": []
     }
 ]
