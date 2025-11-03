@@ -112,50 +112,57 @@ def register_pair(bot: discord.Client, guild: discord.Object):
 
 
 # --- DM Sending ---
-async def send_weekly_dm(bot: discord.Client):
-    """Send weekly pair info via DM to all guild members."""
+async def send_weekly_dm_to_guild(guild: discord.Guild):
+    """Send weekly pair info via DM to all members in a specific guild."""
+
+    # --- Load CSV data ---
     df = load_csv()
 
-    for guild in bot.guilds:
-        for member in guild.members:
-            if member.bot:
-                continue
+    # --- Iterate over all members in the given guild ---
+    for member in guild.members:
+        if member.bot:
+            continue  # skip bot accounts
 
-            display_name = member.display_name.strip()
-            parts = [p.strip() for p in display_name.split("|")]
+        display_name = member.display_name.strip()
+        parts = [p.strip() for p in display_name.split("|")]
 
-            found_pair = None
-            for part in parts:
-                found_pair = find_pair(df, part)
-                if found_pair:
-                    break
-
+        found_pair = None
+        for part in parts:
+            found_pair = find_pair(df, part)
             if found_pair:
-                embed = discord.Embed(
-                    title="👥 **Weekly Pair Reminder!**",
-                    description=f"📘 Section: {found_pair['section']}",
-                    color=discord.Color.blue(),
-                )
-                embed.add_field(
-                    name="Partner 1",
-                    value=f"```{found_pair['p1_name']} "
-                    f"({found_pair['p1_user']})```",
-                    inline=False,
-                )
-                embed.add_field(
-                    name="Partner 2",
-                    value=f"```{found_pair['p2_name']} "
-                    f"({found_pair['p2_user']})```",
-                    inline=False,
-                )
+                break
 
-                try:
-                    await member.send(embed=embed)
-                    print(f"✅ Sent DM to {member.display_name}")
-                except Exception as e:
-                    print(f"⚠️ Failed to DM {member.display_name}: {e}")
-            else:
-                print(f"⚠️ No pair found for {display_name}")
+        # --- If found, send DM ---
+        if found_pair:
+            embed = discord.Embed(
+                title="👥 **Weekly Pair Reminder!**",
+                description=f"📘 Section: {found_pair['section']}",
+                color=discord.Color.blue(),
+            )
+            embed.add_field(
+                name="Partner 1",
+                value=f"```{found_pair['p1_name']} ({found_pair['p1_user']})```",
+                inline=False,
+            )
+            embed.add_field(
+                name="Partner 2",
+                value=f"```{found_pair['p2_name']} ({found_pair['p2_user']})```",
+                inline=False,
+            )
+
+            try:
+                await member.send(embed=embed)
+                print(f"✅ Sent DM to {member.display_name}")
+            except discord.Forbidden:
+                print(f"⚠️ Cannot DM {member.display_name} (privacy settings)")
+            except Exception as e:
+                print(f"⚠️ Failed to DM {member.display_name}: {e}")
+
+        else:
+            print(f"⚠️ No pair found for {display_name}")
+
+    print(f"✅ Finished sending DMs for guild: {guild.name}")
+
 
 
 # --- Weekly Scheduler ---
