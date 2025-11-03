@@ -30,7 +30,7 @@ def test_register_all_commands(mock_bot):
 
     # Get all slash commands
     tree_commands = [c.name for c in mock_bot.tree.get_commands()]
-    print(tree_commands)  # For debugging
+    # print(tree_commands)  # For debugging
 
     # Assert the real command names
     expected_commands = [
@@ -43,9 +43,11 @@ def test_register_all_commands(mock_bot):
         "help",
         "setup",
     ]
-
-    for cmd_name in expected_commands:
+    print("\n")
+    for i,cmd_name in enumerate(expected_commands):
         assert cmd_name in tree_commands, f"Command {cmd_name} not registered"
+        print(f"✅ Command {i + 1} '{cmd_name}' checked")
 
     assert send_noti_task is not None
+    print(f"✅ Notification checked")
 
