@@ -146,26 +146,44 @@ def generate_pair_csv():
 # =====================================================
 def register_random_command(bot: commands.Bot, guild: discord.Object):
     """
-    Register slash command /pair for random pairing with group column
+    Register slash command /random_pair for random pairing with group column
     """
 
     @bot.tree.command(
         name="random_pair",
-        description="random pair save in csv",
+        description="สุ่มจับคู่และบันทึก CSV",
         guild=guild
     )
     async def pair(interaction: discord.Interaction):
-        # Checking permissions before take action.
+        # ตรวจสอบสิทธิ์ TA
         if not any(role.name == "TA" for role in interaction.user.roles):
-            await interaction.response.send_message("❌ ไม่มีสิทธิ์ในการใช้คำสั่ง", ephemeral=True)
+            await interaction.response.send_message(
+                "❌ ไม่มีสิทธิ์ในการใช้คำสั่ง", ephemeral=True
+            )
             return
+
         try:
-            await interaction.response.defer()
+            # Defer interaction ให้ Discord รู้ว่ากำลังทำงาน
+            await interaction.response.defer(ephemeral=True)
+
+            # สร้าง CSV ใน background
             loop = asyncio.get_running_loop()
             file_path = await loop.run_in_executor(None, generate_pair_csv)
+
+            # ส่งไฟล์กลับไป
             file = discord.File(file_path, filename="random_pairs.csv")
-            await interaction.followup.send("✅ สุ่มจับคู่เสร็จสมบูรณ์! ตรวจสอบไฟล์ CSV ด้านล่างครับ", file=file, ephemeral=True)
+            await interaction.followup.send(
+                "👥 คู่ Pair ประจำสัปดาห์มาแว้ว 🥳",
+                file=file,
+                ephemeral=True
+            )
+
         except Exception as e:
-            print(f"เกิดข้อผิดพลาดใน command /pair: {e}")
-            await interaction.followup.send(f"เกิดข้อผิดพลาด: {e}", ephemeral=True)
-    # print("✅ '/random_pair' command registered.")
+            print(f"เกิดข้อผิดพลาดใน command /random_pair: {e}")
+            await interaction.followup.send(
+                f"เกิดข้อผิดพลาด here: {e}",
+                ephemeral=True
+            )
+
+
+

@@ -117,5 +117,11 @@
         "name": "/showijudge",
         "description": "แสดงการแจ้งเตือน ijudge ทั้งหมด",
         "args": []
+    },
+    {
+        "name": "/setup",
+        "description": "สำหรับการตั้งค่า Channel เพื่อส่ง Nofitication ทั้งหมด",
+        "args": []
     }
+
 ]

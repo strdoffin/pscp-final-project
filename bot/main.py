@@ -30,20 +30,29 @@ def run_bot():
     intents.members = True
     intents.dm_messages = True
 
-    guild = discord.Object(id=guild_id)
+    guild = None
     bot = commands.Bot(command_prefix='!', intents=intents)
 
 
     @bot.event
     async def on_ready():
         print(f'✅ Logged in as {bot.user}')
-        print(r"""
- ____  ____   ____ ____    ___ ____     ___  _   _ _     ___ _   _ _____
-|  _ \/ ___| / ___|  _ \  |_ _/ ___|   / _ \| \ | | |   |_ _| \ | | ____|
-| |_) \___ \| |   | |_) |  | |\___ \  | | | |  \| | |    | ||  \| |  _|
-|  __/ ___) | |___|  __/   | | ___) | | |_| | |\  | |___ | || |\  | |___
-|_|   |____/ \____|_|     |___|____/   \___/|_| \_|_____|___|_| \_|_____|
-""")
+        ascii_art = r"""
+  ____  ____   ____ ____    ___ ____     ___  _   _ _     ___ _   _ _____
+ |  _ \/ ___| / ___|  _ \  |_ _/ ___|   / _ \| \ | | |   |_ _| \ | | ____|
+ | |_) \___ \| |   | |_) |  | |\___ \  | | | |  \| | |    | ||  \| |  _|
+ |  __/ ___) | |___|  __/   | | ___) | | |_| | |\  | |___ | || |\  | |___
+ |_|   |____/ \____|_|     |___|____/   \___/|_| \_|_____|___|_| \_|_____|
+"""
+
+        # ANSI color codes
+        RED = "\033[31m"
+        GREEN = "\033[32m"
+        RESET = "\033[0m"
+
+        # Print with colors
+        print(RED + ascii_art + RESET)
+        print(GREEN + ascii_art + RESET)
         # Sync commands
         try:
             bot.tree.clear_commands(guild=None)
