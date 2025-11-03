@@ -33,17 +33,6 @@ def run_bot():
     guild = discord.Object(id=guild_id)
     bot = commands.Bot(command_prefix='!', intents=intents)
 
-    # ✅ Register all commands
-    register_ijudge_link(bot, guild)
-    register_feedback_schedule(bot, guild)
-    register_pair(bot, guild)
-    register_dmpair(bot)
-    register_score_command(bot, guild)
-    register_random_command(bot, guild)
-    register_json_tools(bot, guild)
-    register_help_command(bot, guild)
-    register_setup_command(bot, guild)
-    send_noti_task = register_notification(bot, guild)
 
     @bot.event
     async def on_ready():
@@ -57,7 +46,31 @@ def run_bot():
 """)
 
 
-        # Start the notification loop inside on_ready (async context)
+
+
+        # Sync commands
+        try:
+            
+            bot.tree.clear_commands(guild=None)
+            await bot.tree.sync(guild=None)
+            # ✅ Register all commands
+            register_ijudge_link(bot, guild)
+            register_feedback_schedule(bot, guild)
+            register_pair(bot, guild)
+            register_dmpair(bot)
+            register_score_command(bot, guild)
+            register_random_command(bot, guild)
+            register_json_tools(bot, guild)
+            register_help_command(bot, guild)
+            register_setup_command(bot, guild)
+            send_noti_task = register_notification(bot, guild)
+            synced = await bot.tree.sync(guild=guild)
+            print(f'Synced {len(synced)} commands')
+            for cmd in synced:
+                print(f" - /{cmd.name} #{cmd.description}")
+        except Exception as e:
+            print("Error syncing commands:", e)
+                # Start the notification loop inside on_ready (async context)
         if not send_noti_task.is_running():
             send_noti_task.start()
             # print("Daily notification task started.")
@@ -67,16 +80,6 @@ def run_bot():
             bot.loop.create_task(weekly_dm_scheduler(bot))
             bot.weekly_dm_started = True
             # print("🚀 Weekly DM scheduler started")
-
-        # Sync commands
-        try:
-            # bot.tree.clear_commands(guild=None)
-            synced = await bot.tree.sync(guild=guild)
-            print(f'Synced {len(synced)} commands')
-            for cmd in synced:
-                print(f" - /{cmd.name} #{cmd.description}")
-        except Exception as e:
-            print("Error syncing commands:", e)
 
     bot.run(token, log_handler=handler, log_level=logging.DEBUG)
 
