@@ -5,7 +5,6 @@ from discord.ext import tasks
 import pytz
 from bot.commands import data_store
 
-TARGET_CHANNEL_ID = 1425142738717904926
 DAY_TZ = pytz.timezone("Asia/Bangkok")
 
 
@@ -15,6 +14,7 @@ def register_notification(client: discord.Client, guild: discord.Object):
 
     @tasks.loop(minutes=1)
     async def sent_noti():
+        TARGET_CHANNEL_ID = data_store.load_setup() #1425142738717904926
         await client.wait_until_ready()
         now = datetime.now(DAY_TZ)
         channel = client.get_channel(TARGET_CHANNEL_ID)

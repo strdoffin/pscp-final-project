@@ -8,6 +8,7 @@ from bot.commands.pair import register_pair, register_dmpair, weekly_dm_schedule
 from bot.commands.ijudge import register_ijudge_link
 from bot.commands.score import register_score_command
 from bot.commands.random_pair import register_random_command
+from bot.commands.setup import register_setup_command
 from bot.commands.test_command import register_test_commands
 from bot.commands.jsontools import register_json_tools
 from bot.commands.help import register_help_command
@@ -41,7 +42,7 @@ def run_bot():
     register_random_command(bot, guild)
     register_json_tools(bot, guild)
     register_help_command(bot, guild)
-
+    register_setup_command(bot, guild)
     send_noti_task = register_notification(bot, guild)
 
     @bot.event

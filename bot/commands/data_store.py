@@ -8,12 +8,13 @@ DATA_DIR = "data"
 # File paths for iJudge and Feedback links
 LINKS_FILE = os.path.join(DATA_DIR, "ijudge_links.json")
 SCHEDULES_FILE = os.path.join(DATA_DIR, "feedback_links.json")
+SETUP_FILE = os.path.join(DATA_DIR, "setup.json")
 
 # Ensure the 'data' folder exists
 os.makedirs(DATA_DIR, exist_ok=True)
 
 
-def load_json(file_path: str) -> list:
+def load_json(file_path: str, default=None) -> list:
     """
     Load JSON data from the specified file.
     Returns an empty list if the file does not exist.
@@ -51,3 +52,12 @@ def load_schedules() -> list:
 def save_schedules(data: list) -> None:
     """Save feedback schedule links to the feedback_links.json file."""
     save_json(SCHEDULES_FILE, data)
+
+def load_setup() -> int | None:
+    """Return the saved notification channel ID, or None if not set."""
+    return load_json(SETUP_FILE, default=None)
+
+
+def save_setup(channel_id: int) -> None:
+    """Save a single notification channel ID."""
+    save_json(SETUP_FILE, channel_id)
