@@ -115,13 +115,11 @@ def register_pair(bot: discord.Client, guild: discord.Object):
 async def send_weekly_dm_to_guild(guild: discord.Guild):
     """Send weekly pair info via DM to all members in a specific guild."""
 
-    # --- Load CSV data ---
     df = load_csv()
 
-    # --- Iterate over all members in the given guild ---
     for member in guild.members:
         if member.bot:
-            continue  # skip bot accounts
+            continue  # Skip bots
 
         display_name = member.display_name.strip()
         parts = [p.strip() for p in display_name.split("|")]
@@ -132,7 +130,6 @@ async def send_weekly_dm_to_guild(guild: discord.Guild):
             if found_pair:
                 break
 
-        # --- If found, send DM ---
         if found_pair:
             embed = discord.Embed(
                 title="👥 **Weekly Pair Reminder!**",
@@ -157,17 +154,15 @@ async def send_weekly_dm_to_guild(guild: discord.Guild):
                 print(f"⚠️ Cannot DM {member.display_name} (privacy settings)")
             except Exception as e:
                 print(f"⚠️ Failed to DM {member.display_name}: {e}")
-
         else:
             print(f"⚠️ No pair found for {display_name}")
 
     print(f"✅ Finished sending DMs for guild: {guild.name}")
 
 
-
 # --- Weekly Scheduler ---
-async def weekly_dm_scheduler(bot: discord.Client):
-    """Schedule weekly DM sending every Friday at 08:42 (Thai time)."""
+async def weekly_dm_scheduler(bot: discord.Client, target_guild_id: int):
+    """Schedule weekly DM sending every Friday at 08:42 (Thai time) for one guild."""
     while True:
         now = datetime.datetime.now(THAI_TZ)
 
@@ -192,23 +187,64 @@ async def weekly_dm_scheduler(bot: discord.Client):
         print(f"⏰ Next weekly DM scheduled at {next_friday}")
         await asyncio.sleep(delay)
 
-        # Send DMs
-        await send_weekly_dm(bot)
-        print("✅ Weekly DMs sent!")
+        guild = bot.get_guild(target_guild_id)
+        if guild:
+            await send_weekly_dm_to_guild(guild)
+            print(f"✅ Weekly DMs sent for {guild.name}")
+        else:
+            print(f"⚠️ Guild with ID {target_guild_id} not found!")
 
 
-# --- /dmpair test command ---
 def register_dmpair(bot: discord.Client, guild: discord.Object):
-    """Register the /dmpair command to test sending DM pairs manually."""
+    """Register the /dmpair command to test sending DM pairs manually (current guild only)."""
 
     @bot.tree.command(
         name="dmpair",
-        description="Send test pair info via DM",
+        description="ส่งคู่สุ่มรายสัปดาห์ให้เพื่อนในเซิร์ฟเวอร์นี้ทาง DM (ใช้สำหรับทดสอบ)",
         guild=guild,
     )
     async def dmpair_cmd(interaction: discord.Interaction):
-        await interaction.response.defer(ephemeral=True)
-        await send_weekly_dm(interaction.client)
-        await interaction.followup.send(
-            "✅ ส่ง DM เสร็จสิ้น! (check your inbox)", ephemeral=True
-        )
+        try:
+            # ✅ Step 1: Always respond within 3s so Discord never times out
+            await interaction.response.defer(ephemeral=True)
+            await interaction.followup.send(
+                "⏳ กำลังส่ง DM ให้ทุกคน... โปรดรอสักครู่ (~ไม่เกิน 1-2 นาที)",
+                ephemeral=True,
+            )
+
+            # ✅ Step 2: Define the background sending task
+            async def do_send():
+                try:
+                    await send_weekly_dm_to_guild(interaction.guild)
+                    await interaction.followup.send(
+                        "✅ ส่ง DM เสร็จสิ้น!",
+                        ephemeral=True,
+                    )
+                except Exception as e:
+                    print(f"⚠️ Error inside do_send: {e}")
+                    await interaction.followup.send(
+                        "⚠️ ไม่สามารถส่ง DM ได้ กรุณาลองใหม่อีกครั้งในภายหลัง",
+                        ephemeral=True,
+                    )
+
+            # ✅ Step 3: Run the background task
+            bot.loop.create_task(do_send())
+
+        except Exception as e:
+            # ✅ Any top-level error — still respond gracefully
+            print(f"⚠️ Error starting /dmpair: {e}")
+            try:
+                if not interaction.response.is_done():
+                    await interaction.response.send_message(
+                        "⚠️ ไม่สามารถส่ง DM ได้ กรุณาลองใหม่อีกครั้งในภายหลัง",
+                        ephemeral=True,
+                    )
+                else:
+                    await interaction.followup.send(
+                        "⚠️ ไม่สามารถส่ง DM ได้ กรุณาลองใหม่อีกครั้งในภายหลัง",
+                        ephemeral=True,
+                    )
+            except Exception as e2:
+                print(f"⚠️ Failed to send fallback error: {e2}")
+
+    print("✅ /dmpair command registered")
