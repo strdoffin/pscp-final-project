@@ -48,14 +48,15 @@ def run_bot():
     @bot.event
     async def on_ready():
         print(f'✅ Logged in as {bot.user}')
-        print(
-"\n ██   ██ ███ ██      ██   █  ███      █  █  █ █   ███ █  █ ███ \n",
-"█ █ █   █   █ █     █ █ █ █  █      █ █ ██ █ █    █  ██ █ █   \n",
-"██  █   █   ██      ██  █ █  █      █ █ █ ██ █    █  █ ██ ██  \n",
-"█    █  █   █       ██  █ █  █      █ █ █ ██ █    █  █ ██ █   \n",
-"█     █ █   █       █ █ █ █  █      █ █ █  █ █    █  █  █ █   \n",
-"█   ██  ███ █       ██   █   █       █  █  █ ███ ███ █  █ ███ \n",
-                                                              )
+        print(r"""
+ ____  ____   ____ ____    ___ ____     ___  _   _ _     ___ _   _ _____ 
+|  _ \/ ___| / ___|  _ \  |_ _/ ___|   / _ \| \ | | |   |_ _| \ | | ____|
+| |_) \___ \| |   | |_) |  | |\___ \  | | | |  \| | |    | ||  \| |  _|  
+|  __/ ___) | |___|  __/   | | ___) | | |_| | |\  | |___ | || |\  | |___ 
+|_|   |____/ \____|_|     |___|____/   \___/|_| \_|_____|___|_| \_|_____|
+""")
+
+
         # Start the notification loop inside on_ready (async context)
         if not send_noti_task.is_running():
             send_noti_task.start()
@@ -69,6 +70,7 @@ def run_bot():
 
         # Sync commands
         try:
+            # bot.tree.clear_commands(guild=None)
             synced = await bot.tree.sync(guild=guild)
             print(f'Synced {len(synced)} commands')
             for cmd in synced:
