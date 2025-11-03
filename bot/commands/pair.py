@@ -196,13 +196,19 @@ def register_dmpair(bot: discord.Client):
         name="dmpair",
         description="Send pair info via DM to members of this guild",
     )
+    
     async def dmpair_cmd(interaction: discord.Interaction):
         if interaction.guild is None:
             await interaction.response.send_message(
                 "❌ คำสั่งนี้ใช้ได้เฉพาะในเซิร์ฟเวอร์เท่านั้น", ephemeral=True
             )
             return
-
+        if not any(role.name == "TA" for role in interaction.user.roles):
+            await interaction.response.send_message(
+            "❌ คุณไม่มีสิทธิ์ใช้คำสั่งนี้ (เฉพาะ TA เท่านั้น)",
+            ephemeral=True,
+        )
+            return
         await interaction.response.defer(ephemeral=True)
         df = load_csv()
         guild = interaction.guild
@@ -261,5 +267,3 @@ async def send_dm_to_guild(guild, df):
                 print(f"✅ Sent DM to {member.display_name}")
             except Exception as e:
                 print(f"⚠️ Failed to DM {member.display_name}: {e}")
-        else:
-            print(f"⚠️ No pair found for {display_name}")
