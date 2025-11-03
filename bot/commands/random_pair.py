@@ -168,4 +168,4 @@ def register_random_command(bot: commands.Bot, guild: discord.Object):
         except Exception as e:
             print(f"เกิดข้อผิดพลาดใน command /pair: {e}")
             await interaction.followup.send(f"เกิดข้อผิดพลาด: {e}", ephemeral=True)
-    print("✅ '/random_pair' command registered.")
+    # print("✅ '/random_pair' command registered.")

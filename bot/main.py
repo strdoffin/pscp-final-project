@@ -48,22 +48,29 @@ def run_bot():
     @bot.event
     async def on_ready():
         print(f'✅ Logged in as {bot.user}')
-
+        print(
+"\n ██   ██ ███ ██      ██   █  ███      █  █  █ █   ███ █  █ ███ \n",
+"█ █ █   █   █ █     █ █ █ █  █      █ █ ██ █ █    █  ██ █ █   \n",
+"██  █   █   ██      ██  █ █  █      █ █ █ ██ █    █  █ ██ ██  \n",
+"█    █  █   █       ██  █ █  █      █ █ █ ██ █    █  █ ██ █   \n",
+"█     █ █   █       █ █ █ █  █      █ █ █  █ █    █  █  █ █   \n",
+"█   ██  ███ █       ██   █   █       █  █  █ ███ ███ █  █ ███ \n",
+                                                              )
         # Start the notification loop inside on_ready (async context)
         if not send_noti_task.is_running():
             send_noti_task.start()
-            print("Daily notification task started.")
+            # print("Daily notification task started.")
 
         # Start the weekly DM scheduler (now per guild)
         if not hasattr(bot, 'weekly_dm_started'):
             bot.loop.create_task(weekly_dm_scheduler(bot))
             bot.weekly_dm_started = True
-            print("🚀 Weekly DM scheduler started")
+            # print("🚀 Weekly DM scheduler started")
 
         # Sync commands
         try:
             synced = await bot.tree.sync(guild=guild)
-            print(f'Synced {len(synced)} command(s) to guild {guild_id}')
+            print(f'Synced {len(synced)} commands')
             for cmd in synced:
                 print(f" - /{cmd.name} #{cmd.description}")
         except Exception as e:

@@ -29,7 +29,7 @@ def load_csv():
         if col in df.columns:
             df[col] = df[col].astype(str).str.strip()
 
-    print(f"✅ Loaded CSV: {LOCAL_CSV}")
+    # print(f"✅ Loaded CSV: {LOCAL_CSV}")
     return df
 
 
@@ -107,7 +107,7 @@ def register_pair(bot: discord.Client, guild: discord.Object):
             )
             await interaction.followup.send(embed=embed, ephemeral=True)
 
-    print("✅ /pair command registered")
+    # print("✅ /pair command registered")
 
 
 # --- DM Sending ---
@@ -181,7 +181,7 @@ async def weekly_dm_scheduler(bot: discord.Client):
         ) + datetime.timedelta(days=days_ahead)
 
         delay = (next_friday - now).total_seconds()
-        print(f"⏰ Next weekly DM scheduled at {next_friday}")
+        # print(f"⏰ Next weekly DM scheduled at {next_friday}")
         await asyncio.sleep(delay)
 
         # Send DMs

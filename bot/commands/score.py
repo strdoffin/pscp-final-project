@@ -127,4 +127,4 @@ def register_score_command(bot: commands.Bot, guild: discord.Object):
             print(f"เกิดข้อผิดพลาดใน command /score: {e}")
             await interaction.followup.send(f"เกิดข้อผิดพลาด: {e}")
 
-    print("✅ /core command registered.")
+    # print("✅ /core command registered.")
