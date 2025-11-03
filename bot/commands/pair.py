@@ -11,7 +11,6 @@ LOCAL_CSV = r"data/random_pairs.csv"
 GLOBAL_DF = None  # Cache for loaded CSV
 THAI_TZ = pytz.timezone("Asia/Bangkok")  # Thailand timezone
 
-
 # --- Load CSV ---
 def load_csv():
     """Load and cache the CSV file containing pairing data."""
@@ -112,57 +111,55 @@ def register_pair(bot: discord.Client, guild: discord.Object):
 
 
 # --- DM Sending ---
-async def send_weekly_dm_to_guild(guild: discord.Guild):
-    """Send weekly pair info via DM to all members in a specific guild."""
-
+async def send_weekly_dm(bot: discord.Client):
+    """Send weekly pair info via DM to all guild members."""
     df = load_csv()
 
-    for member in guild.members:
-        if member.bot:
-            continue  # Skip bots
+    for guild in bot.guilds:
+        for member in guild.members:
+            if member.bot:
+                continue
 
-        display_name = member.display_name.strip()
-        parts = [p.strip() for p in display_name.split("|")]
+            display_name = member.display_name.strip()
+            parts = [p.strip() for p in display_name.split("|")]
 
-        found_pair = None
-        for part in parts:
-            found_pair = find_pair(df, part)
+            found_pair = None
+            for part in parts:
+                found_pair = find_pair(df, part)
+                if found_pair:
+                    break
+
             if found_pair:
-                break
+                embed = discord.Embed(
+                    title="👥 **Weekly Pair Reminder!**",
+                    description=f"📘 Section: {found_pair['section']}",
+                    color=discord.Color.blue(),
+                )
+                embed.add_field(
+                    name="Partner 1",
+                    value=f"```{found_pair['p1_name']} "
+                    f"({found_pair['p1_user']})```",
+                    inline=False,
+                )
+                embed.add_field(
+                    name="Partner 2",
+                    value=f"```{found_pair['p2_name']} "
+                    f"({found_pair['p2_user']})```",
+                    inline=False,
+                )
 
-        if found_pair:
-            embed = discord.Embed(
-                title="👥 **Weekly Pair Reminder!**",
-                description=f"📘 Section: {found_pair['section']}",
-                color=discord.Color.blue(),
-            )
-            embed.add_field(
-                name="Partner 1",
-                value=f"```{found_pair['p1_name']} ({found_pair['p1_user']})```",
-                inline=False,
-            )
-            embed.add_field(
-                name="Partner 2",
-                value=f"```{found_pair['p2_name']} ({found_pair['p2_user']})```",
-                inline=False,
-            )
-
-            try:
-                await member.send(embed=embed)
-                print(f"✅ Sent DM to {member.display_name}")
-            except discord.Forbidden:
-                print(f"⚠️ Cannot DM {member.display_name} (privacy settings)")
-            except Exception as e:
-                print(f"⚠️ Failed to DM {member.display_name}: {e}")
-        else:
-            print(f"⚠️ No pair found for {display_name}")
-
-    print(f"✅ Finished sending DMs for guild: {guild.name}")
+                try:
+                    await member.send(embed=embed)
+                    print(f"✅ Sent DM to {member.display_name}")
+                except Exception as e:
+                    print(f"⚠️ Failed to DM {member.display_name}: {e}")
+            else:
+                print(f"⚠️ No pair found for {display_name}")
 
 
 # --- Weekly Scheduler ---
-async def weekly_dm_scheduler(bot: discord.Client, target_guild_id: int):
-    """Schedule weekly DM sending every Friday at 08:42 (Thai time) for one guild."""
+async def weekly_dm_scheduler(bot: discord.Client):
+    """Schedule weekly DM sending every Friday at 08:42 (Thai time)."""
     while True:
         now = datetime.datetime.now(THAI_TZ)
 
@@ -187,64 +184,82 @@ async def weekly_dm_scheduler(bot: discord.Client, target_guild_id: int):
         print(f"⏰ Next weekly DM scheduled at {next_friday}")
         await asyncio.sleep(delay)
 
-        guild = bot.get_guild(target_guild_id)
-        if guild:
-            await send_weekly_dm_to_guild(guild)
-            print(f"✅ Weekly DMs sent for {guild.name}")
-        else:
-            print(f"⚠️ Guild with ID {target_guild_id} not found!")
+        # Send DMs
+        await send_weekly_dm(bot)
+        print("✅ Weekly DMs sent!")
 
 
-def register_dmpair(bot: discord.Client, guild: discord.Object):
-    """Register the /dmpair command to test sending DM pairs manually (current guild only)."""
+def register_dmpair(bot: discord.Client):
+    """Register the /dmpair command for any guild, with timeout/error handling."""
 
     @bot.tree.command(
         name="dmpair",
-        description="ส่งคู่สุ่มรายสัปดาห์ให้เพื่อนในเซิร์ฟเวอร์นี้ทาง DM (ใช้สำหรับทดสอบ)",
-        guild=guild,
+        description="Send pair info via DM to members of this guild",
     )
     async def dmpair_cmd(interaction: discord.Interaction):
+        if interaction.guild is None:
+            await interaction.response.send_message(
+                "❌ คำสั่งนี้ใช้ได้เฉพาะในเซิร์ฟเวอร์เท่านั้น", ephemeral=True
+            )
+            return
+
+        await interaction.response.defer(ephemeral=True)
+        df = load_csv()
+        guild = interaction.guild
+
         try:
-            # ✅ Step 1: Always respond within 3s so Discord never times out
-            await interaction.response.defer(ephemeral=True)
+            # ใช้ asyncio.wait_for เพื่อจำกัดเวลาการทำงานไม่เกิน 30 วินาที
+            await asyncio.wait_for(send_dm_to_guild(guild, df), timeout=30)
             await interaction.followup.send(
-                "⏳ กำลังส่ง DM ให้ทุกคน... โปรดรอสักครู่ (~ไม่เกิน 1-2 นาที)",
-                ephemeral=True,
+                "✅ ส่ง DM เสร็จสิ้น! (check your inbox)", ephemeral=True
+            )
+        except asyncio.TimeoutError:
+            await interaction.followup.send(
+                "❌ ไม่สามารถใช้คำสั่งนี้ได้ (Timeout)", ephemeral=True
+            )
+        except Exception as e:
+            print(f"⚠️ Error in /dmpair: {e}")
+            await interaction.followup.send(
+                "❌ ไม่สามารถใช้คำสั่งนี้ได้", ephemeral=True
             )
 
-            # ✅ Step 2: Define the background sending task
-            async def do_send():
-                try:
-                    await send_weekly_dm_to_guild(interaction.guild)
-                    await interaction.followup.send(
-                        "✅ ส่ง DM เสร็จสิ้น!",
-                        ephemeral=True,
-                    )
-                except Exception as e:
-                    print(f"⚠️ Error inside do_send: {e}")
-                    await interaction.followup.send(
-                        "⚠️ ไม่สามารถส่ง DM ได้ กรุณาลองใหม่อีกครั้งในภายหลัง",
-                        ephemeral=True,
-                    )
 
-            # ✅ Step 3: Run the background task
-            bot.loop.create_task(do_send())
+async def send_dm_to_guild(guild, df):
+    """Send pair DM to all members of a guild."""
+    async for member in guild.fetch_members(limit=None):
+        if member.bot:
+            continue
 
-        except Exception as e:
-            # ✅ Any top-level error — still respond gracefully
-            print(f"⚠️ Error starting /dmpair: {e}")
+        display_name = member.display_name.strip()
+        parts = [p.strip() for p in display_name.split("|")]
+
+        found_pair = None
+        for part in parts:
+            found_pair = find_pair(df, part)
+            if found_pair:
+                break
+
+        if found_pair:
+            embed = discord.Embed(
+                title="👥 **Weekly Pair Info**",
+                description=f"📘 Section: {found_pair['section']}",
+                color=discord.Color.blue(),
+            )
+            embed.add_field(
+                name="Partner 1",
+                value=f"```{found_pair['p1_name']} ({found_pair['p1_user']})```",
+                inline=False,
+            )
+            embed.add_field(
+                name="Partner 2",
+                value=f"```{found_pair['p2_name']} ({found_pair['p2_user']})```",
+                inline=False,
+            )
+
             try:
-                if not interaction.response.is_done():
-                    await interaction.response.send_message(
-                        "⚠️ ไม่สามารถส่ง DM ได้ กรุณาลองใหม่อีกครั้งในภายหลัง",
-                        ephemeral=True,
-                    )
-                else:
-                    await interaction.followup.send(
-                        "⚠️ ไม่สามารถส่ง DM ได้ กรุณาลองใหม่อีกครั้งในภายหลัง",
-                        ephemeral=True,
-                    )
-            except Exception as e2:
-                print(f"⚠️ Failed to send fallback error: {e2}")
-
-    print("✅ /dmpair command registered")
+                await member.send(embed=embed)
+                print(f"✅ Sent DM to {member.display_name}")
+            except Exception as e:
+                print(f"⚠️ Failed to DM {member.display_name}: {e}")
+        else:
+            print(f"⚠️ No pair found for {display_name}")

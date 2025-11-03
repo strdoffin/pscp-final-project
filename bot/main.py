@@ -27,7 +27,7 @@ def run_bot():
     intents = discord.Intents.default()
     intents.message_content = True
     intents.members = True
-    intents.dm_messages = True 
+    intents.dm_messages = True
 
     guild = discord.Object(id=guild_id)
     bot = commands.Bot(command_prefix='!', intents=intents)
@@ -36,13 +36,13 @@ def run_bot():
     register_ijudge_link(bot, guild)
     register_feedback_schedule(bot, guild)
     register_pair(bot, guild)
-    register_dmpair(bot, guild)
+    register_dmpair(bot)
     register_score_command(bot, guild)
     register_random_command(bot, guild)
     register_json_tools(bot, guild)
     register_help_command(bot, guild)
 
-    send_noti_task = register_notification(bot,guild)
+    send_noti_task = register_notification(bot, guild)
 
     @bot.event
     async def on_ready():
@@ -53,7 +53,7 @@ def run_bot():
             send_noti_task.start()
             print("Daily notification task started.")
 
-        # Start the weekly DM scheduler
+        # Start the weekly DM scheduler (now per guild)
         if not hasattr(bot, 'weekly_dm_started'):
             bot.loop.create_task(weekly_dm_scheduler(bot))
             bot.weekly_dm_started = True
@@ -64,7 +64,7 @@ def run_bot():
             synced = await bot.tree.sync(guild=guild)
             print(f'Synced {len(synced)} command(s) to guild {guild_id}')
             for cmd in synced:
-                print(f" - /{cmd.name}", "#" +cmd.description)
+                print(f" - /{cmd.name} #{cmd.description}")
         except Exception as e:
             print("Error syncing commands:", e)
 
