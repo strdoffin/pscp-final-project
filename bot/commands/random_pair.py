@@ -7,7 +7,10 @@ import csv
 import io
 from discord.ext import commands
 
-# --- Google Sheet settings ---
+
+# =====================================================
+# 🔧 GOOGLE SHEET CONFIGURATION
+# =====================================================
 SHEET_ID = "1ydK3l7Lks3p57Tmvxrhk3dqu5dVcOmNgBetvVrWnNyk"
 SHEET_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=1740081435"
 csv_path = "data/random_pairs.csv"
@@ -19,9 +22,9 @@ COLUMN_MAPPING = {
     "SEC": 2,        # H
 }
 
-# --- Function: read data from Google Sheet ---
-
-
+# =====================================================
+# FETCHING STUDENT LIST
+# =====================================================
 def fetch_student_list():
     """
     Read ID (col A), Name (col B), and Group (col C) from Google Sheet
@@ -48,9 +51,10 @@ def fetch_student_list():
         print(f"เกิดข้อผิดพลาดในการอ่าน Google Sheet: {e}")
         return None
 
-# --- แบ่งกลุ่มตาม section ---
 
-
+# =====================================================
+# GROUP STUDENT BY SECTIONS
+# =====================================================
 def group_students(students, sections):
     """
     แบ่งรายชื่อออกเป็นตามกลุ่ม
@@ -65,7 +69,9 @@ def group_students(students, sections):
     return groups
 
 
-# --- สุ่มจับคู่ภายในกลุ่ม ---
+# =====================================================
+# RANDOM PAIR IN STUDENTS GROUPS
+# =====================================================
 def pair_students_in_group(student_group, group_name):
     """
     สุ่มจับคู่ Pair ตาม Section
@@ -91,9 +97,9 @@ def pair_students_in_group(student_group, group_name):
     return pairs
 
 
-# --- รวมและบันทึก CSV ---
-
-
+# =====================================================
+# GENERATE CSV FILE AND SAVE
+# =====================================================
 def generate_pair_csv():
     """
     ฟังชั่นสำหรับ สุ่มคู่ Pair และ บันทึก CSV
@@ -134,16 +140,22 @@ def generate_pair_csv():
 
     return csv_path
 
-# --- Register /pair command ---
 
-
+# =====================================================
+# REGISTER /random_pair COMMAND
+# =====================================================
 def register_random_command(bot: commands.Bot, guild: discord.Object):
     """
     Register slash command /pair for random pairing with group column
     """
 
-    @bot.tree.command(name="random_pair", description="random pair save in csv", guild=guild)
+    @bot.tree.command(
+        name="random_pair",
+        description="random pair save in csv",
+        guild=guild
+    )
     async def pair(interaction: discord.Interaction):
+        # Checking permissions before take action.
         if not any(role.name == "TA" for role in interaction.user.roles):
             await interaction.response.send_message("❌ ไม่มีสิทธิ์ในการใช้คำสั่ง", ephemeral=True)
             return
@@ -151,10 +163,9 @@ def register_random_command(bot: commands.Bot, guild: discord.Object):
             await interaction.response.defer()
             loop = asyncio.get_running_loop()
             file_path = await loop.run_in_executor(None, generate_pair_csv)
-
             file = discord.File(file_path, filename="random_pairs.csv")
-            await interaction.followup.send("✅ สุ่มจับคู่เสร็จสมบูรณ์! ตรวจสอบไฟล์ CSV ด้านล่างครับ", file=file , ephemeral=True)
+            await interaction.followup.send("✅ สุ่มจับคู่เสร็จสมบูรณ์! ตรวจสอบไฟล์ CSV ด้านล่างครับ", file=file, ephemeral=True)
         except Exception as e:
             print(f"เกิดข้อผิดพลาดใน command /pair: {e}")
             await interaction.followup.send(f"เกิดข้อผิดพลาด: {e}", ephemeral=True)
-        print("✅ 'pair' command registered.")
+    print("✅ '/random_pair' command registered.")
