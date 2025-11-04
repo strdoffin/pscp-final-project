@@ -122,6 +122,11 @@
         "name": "/setup",
         "description": "สำหรับการตั้งค่า Channel เพื่อส่ง Nofitication ทั้งหมด",
         "args": []
+    },
+    {
+        "name": "/setscore",
+        "description": "สำหรับการตั้งค่า Google Sheet เพื่อการเรียกดูคะแนน",
+        "args":[]
     }
 
 ]
