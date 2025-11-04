@@ -29,7 +29,7 @@ def run_bot():
     intents.members = True
     intents.dm_messages = True
 
-    guild = None
+    guild = discord.Object(id=guild_id)
     bot = commands.Bot(command_prefix='!', intents=intents)
 
 
