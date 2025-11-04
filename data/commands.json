@@ -100,13 +100,8 @@
     },
     {
         "name": "/score",
-        "description": "ค้นหาคะแนนนักศึกษาด้วย รหัส นศ.",
-        "args": [
-            {
-                "name": "student_id",
-                "description": "ใส่รหัสนักศึกษา"
-            }
-        ]
+        "description": "แจ้งคะแนนนักศึกษา",
+        "args": []
     },
     {
         "name": "/showfeedback",
@@ -120,7 +115,7 @@
     },
     {
         "name": "/setup",
-        "description": "สำหรับการตั้งค่า Channel เพื่อส่ง Nofitication ทั้งหมด",
+        "description": "สำหรับการตั้งค่า Channel เพื่อส่ง Notification ทั้งหมด",
         "args": []
     },
     {
