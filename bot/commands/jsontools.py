@@ -1,183 +1,113 @@
-"""json tools managment"""
+"""Dynamic JSON Tools Management"""
 import discord
 from discord import app_commands
 from bot.commands import data_store
 
 
 def register_json_tools(client: discord.Client, guild: discord.Object):
-    """ ===== Show iJudge entries ===== """
-    @client.tree.command(
-        name="showijudge",
-        description="Show all iJudge rounds",
-        guild=guild
-    )
-    async def show_ijudge(interaction: discord.Interaction):
+    """Register dynamic JSON management commands for iJudge & Feedback"""
+
+    # === Define data types and handlers ===
+    json_configs = {
+        "ijudge": {
+            "load": data_store.load_links,
+            "save": data_store.save_links,
+            "title": "Ijudge Rounds",
+            "label_key": ["round", "message", "link"],
+            "no_data_msg": "ไม่พบรอบที่ลงไว้",
+            "cleared_msg": "✅ ลบรอบทั้งหมดเสร็จสิ้น",
+            "clear_item_msg": "✅ ลบรอบที่ `{label}` (index {index}) ออกจาก iJudge list แล้ว",
+            "invalid_index_msg": "⚠️ หมายเลขรอบไม่ถูกต้อง",
+        },
+        "feedback": {
+            "load": data_store.load_schedules,
+            "save": data_store.save_schedules,
+            "title": "Feedback Schedules",
+            "label_key": ["message"],
+            "no_data_msg": "ℹ️ ไม่พบตาราง feed back",
+            "cleared_msg": "✅ ลบรอบ feed back ทั้งหมดเสร็จสิ้น",
+            "clear_item_msg": "✅ ตาราง feedback ที่ `{label}` (index {index}) ถูกลบเรียบร้อยแล้ว",
+            "invalid_index_msg": "⚠️ หมายเลขตาราง feedback ไม่ถูกต้อง",
+        },
+    }
+
+    # === Helper to check TA role ===
+    async def check_ta(interaction: discord.Interaction) -> bool:
         if not any(role.name == "TA" for role in interaction.user.roles):
             await interaction.response.send_message(
                 "❌ ไม่มีสิทธิ์ในการใช้คำสั่ง", ephemeral=True
             )
-            return
+            return False
+        return True
 
-        schedules = data_store.load_links()
-        if not schedules:
-            await interaction.response.send_message(
-                "ไม่พบรอบที่ลงไว้", ephemeral=True
-            )
-            return
-
-        msg = "📋 **Ijudge Rounds:**\n"
-        for idx, item in enumerate(schedules, 1):
-            label = (
-                item.get("message")
-                or item.get("link")
-                or item.get("round", "Unknown")
-            )
-            year = item.get("year", "????")
-            month = item.get("month", "??")
-            day = item.get("day", "??")
-            hour = item.get("hour", 0)
-            minute = item.get("minute", 0)
-
-            msg += (
-                f"{idx}. `รอบที่ : {label}` เวลา "
-                f"`{year}-{month:02d}-{day:02d} {hour:02d}:{minute:02d}`\n"
-            )
-
-        await interaction.response.send_message(msg, ephemeral=True)
-
-    # ===== Clear all iJudge entries =====
-    @client.tree.command(
-        name="clearijudge",
-        description="Clear all iJudge rounds",
-        guild=guild
-    )
-    async def clear_ijudge(interaction: discord.Interaction):
-        if not any(role.name == "TA" for role in interaction.user.roles):
-            await interaction.response.send_message(
-                "❌ ไม่มีสิทธิ์ในการใช้คำสั่ง", ephemeral=True
-            )
-            return
-
-        data_store.save_links([])
-        await interaction.response.send_message(
-            "✅ ลบรอบทั้งหมดเสร็จสิ้น", ephemeral=True
+    # === Factory for show command ===
+    def make_show_command(key: str, cfg: dict):
+        @client.tree.command(
+            name=f"show{key}",
+            description=f"Show all {cfg['title']}",
+            guild=guild,
         )
+        async def show_command(interaction: discord.Interaction):
+            if not await check_ta(interaction):
+                return
 
-    # ===== Clear specific iJudge entry by index =====
-    @client.tree.command(
-        name="clearijudge_index",
-        description="Clear a specific iJudge round by index",
-        guild=guild
-    )
-    @app_commands.describe(
-        index="Index number of the round to delete (from /showijudge)"
-    )
-    async def clear_ijudge_index(
-        interaction: discord.Interaction, index: int
-    ):
-        if not any(role.name == "TA" for role in interaction.user.roles):
-            await interaction.response.send_message(
-                "❌ ไม่มีสิทธิ์ในการใช้คำสั่ง", ephemeral=True
-            )
-            return
+            data = cfg["load"]()
+            if not data:
+                await interaction.response.send_message(cfg["no_data_msg"], ephemeral=True)
+                return
 
-        links = data_store.load_links()
-        if index < 1 or index > len(links):
-            await interaction.response.send_message(
-                "⚠️ หมายเลขรอบไม่ถูกต้อง", ephemeral=True
-            )
-            return
+            msg = f"📋 **{cfg['title']}:**\n"
+            for idx, item in enumerate(data, 1):
+                label = next((item.get(k) for k in cfg["label_key"] if item.get(k)), "Unknown")
+                year = item.get("year", "????")
+                month = item.get("month", "??")
+                day = item.get("day", "??")
+                hour = item.get("hour", 0)
+                minute = item.get("minute", 0)
+                msg += f"{idx}. `{label}` เวลา `{year}-{month:02d}-{day:02d} {hour:02d}:{minute:02d}`\n"
 
-        removed = links.pop(index - 1)
-        data_store.save_links(links)
+            await interaction.response.send_message(msg, ephemeral=True)
 
-        label = removed.get("round") or removed.get("message") or "Unknown"
-        await interaction.response.send_message(
-            f"✅ ลบรอบที่ `{label}` (index {index}) "
-            "ออกจาก iJudge list แล้ว",
-            ephemeral=True,
+    # === Factory for clear all command ===
+    def make_clear_all_command(key: str, cfg: dict):
+        @client.tree.command(
+            name=f"clear{key}",
+            description=f"Clear all {cfg['title']}",
+            guild=guild,
         )
+        async def clear_all(interaction: discord.Interaction):
+            if not await check_ta(interaction):
+                return
 
-    # ===== Show Feedback schedules =====
-    @client.tree.command(
-        name="showfeedback",
-        description="Show all Feedback schedules",
-        guild=guild
-    )
-    async def show_feedback(interaction: discord.Interaction):
-        if not any(role.name == "TA" for role in interaction.user.roles):
-            await interaction.response.send_message(
-                "❌ ไม่มีสิทธิ์ในการใช้คำสั่ง", ephemeral=True
-            )
-            return
+            cfg["save"]([])
+            await interaction.response.send_message(cfg["cleared_msg"], ephemeral=True)
 
-        schedules = data_store.load_schedules()
-        if not schedules:
-            await interaction.response.send_message(
-                "ℹ️ ไม่พบตาราง feed back", ephemeral=True
-            )
-            return
-
-        msg = "📋 **Feedback Schedules:**\n"
-        for idx, item in enumerate(schedules, 1):
-            msg += (
-                f"{idx}. `{item['message']}` at "
-                f"`{item['year']}-{item['month']:02d}-{item['day']:02d} "
-                f"{item['hour']:02d}:{item['minute']:02d}`\n"
-            )
-
-        await interaction.response.send_message(msg, ephemeral=True)
-
-    # ===== Clear all Feedback schedules =====
-    @client.tree.command(
-        name="clearfeedback",
-        description="Clear all Feedback schedules",
-        guild=guild
-    )
-    async def clear_feedback(interaction: discord.Interaction):
-        if not any(role.name == "TA" for role in interaction.user.roles):
-            await interaction.response.send_message(
-                "❌ ไม่มีสิทธิ์ในการใช้คำสั่ง", ephemeral=True
-            )
-            return
-
-        data_store.save_schedules([])
-        await interaction.response.send_message(
-            "✅ ลบรอบ feed back ทั้งหมดเสร็จสิ้น", ephemeral=True
+    # === Factory for clear by index command ===
+    def make_clear_index_command(key: str, cfg: dict):
+        @client.tree.command(
+            name=f"clear{key}_index",
+            description=f"Clear specific {cfg['title']} by index",
+            guild=guild,
         )
+        @app_commands.describe(index="Index number from /show command")
+        async def clear_index(interaction: discord.Interaction, index: int):
+            if not await check_ta(interaction):
+                return
 
-    # ===== Clear specific Feedback schedule by index =====
-    @client.tree.command(
-        name="clearfeedback_index",
-        description="Clear a specific Feedback schedule by index",
-        guild=guild
-    )
-    @app_commands.describe(
-        index="Index number of the feedback schedule to delete "
-        "(from /showfeedback)"
-    )
-    async def clear_feedback_index(
-        interaction: discord.Interaction, index: int
-    ):
-        if not any(role.name == "TA" for role in interaction.user.roles):
-            await interaction.response.send_message(
-                "❌ ไม่มีสิทธิ์ในการใช้คำสั่ง", ephemeral=True
-            )
-            return
+            items = cfg["load"]()
+            if index < 1 or index > len(items):
+                await interaction.response.send_message(cfg["invalid_index_msg"], ephemeral=True)
+                return
 
-        schedules = data_store.load_schedules()
-        if index < 1 or index > len(schedules):
-            await interaction.response.send_message(
-                "⚠️ หมายเลขตาราง feedback ไม่ถูกต้อง", ephemeral=True
-            )
-            return
+            removed = items.pop(index - 1)
+            cfg["save"](items)
 
-        removed = schedules.pop(index - 1)
-        data_store.save_schedules(schedules)
+            label = next((removed.get(k) for k in cfg["label_key"] if removed.get(k)), "Unknown")
+            msg = cfg["clear_item_msg"].format(label=label, index=index)
+            await interaction.response.send_message(msg, ephemeral=True)
 
-        msg = removed.get("message") or "Unknown link"
-        await interaction.response.send_message(
-            f"✅ ตาราง feedback ที่ `{msg}` (index {index}) "
-            "ถูกลบเรียบร้อยแล้ว",
-            ephemeral=True,
-        )
+    # === Register all commands ===
+    for key, cfg in json_configs.items():
+        make_show_command(key, cfg)
+        make_clear_all_command(key, cfg)
+        make_clear_index_command(key, cfg)
