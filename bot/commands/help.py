@@ -39,7 +39,7 @@ except Exception as e:
 # 🧱 EMBED CREATION
 # =====================================================
 
-def create_help_embed(page: int = 1, keyword: str | None = None) -> Embed:
+def create_help_embed(page: int = 1, keyword: str = "") -> Embed:
     """
     Create a paginated Discord Embed showing a list of available bot commands.
     Supports optional keyword-based filtering.
@@ -121,56 +121,43 @@ def create_pagination_view(
 
     # Filter commands if searching
     key = keyword.lower() if keyword else None
+
     filtered = [
         cmd for cmd in COMMANDS
         if not key or key in cmd["name"].lower() or key in cmd["description"].lower()
     ]
+
+    # Handle pagination logic
     total_pages = max(1, math.ceil(len(filtered) / COMMANDS_PER_PAGE))
+    current_page = max(1, min(current_page, total_pages))
 
-    # Define navigation buttons
-    prev_button = Button(
-        label="⬅️ ก่อนหน้า",
-        style=ButtonStyle.secondary,
-        disabled=(current_page <= 1),
-    )
-    next_button = Button(
-        label="➡️ ถัดไป",
-        style=ButtonStyle.secondary,
-        disabled=(current_page >= total_pages),
-    )
+    # For loop for create pagination button
+    for label, delta in [("⬅️ ก่อนหน้า", -1), ("➡️ ถัดไป", 1)]:
+        async def callback(i, d=delta):
+            """
+            Handle When User interact with button
+            """
+            if i.user.id != interaction.user.id:
+                await i.response.send_message("❌ คุณไม่สามารถควบคุมหน้านี้ได้", ephemeral=True)
+                return
+            new_page = max(1, min(current_page + d, total_pages))
+            emb = create_help_embed(new_page, keyword)
+            await i.response.edit_message(embed=emb, view=create_pagination_view(interaction, new_page, keyword))
 
-    async def update_message(i: Interaction, page: int) -> None:
-        """Update the embed and buttons when changing pages."""
-        embed = create_help_embed(page, keyword)
-        new_view = create_pagination_view(interaction, page, keyword)
-        await i.edit_original_response(embed=embed, view=new_view)
-
-    # Button callbacks
-    async def prev_callback(i: Interaction) -> None:
-        nonlocal current_page
-        if i.user.id != interaction.user.id:
-            await i.response.send_message("❌ คุณไม่สามารถควบคุมหน้านี้ได้", ephemeral=True)
-            return
-        current_page -= 1
-        await i.response.defer()
-        await update_message(i, current_page)
-
-    async def next_callback(i: Interaction) -> None:
-        nonlocal current_page
-        if i.user.id != interaction.user.id:
-            await i.response.send_message("❌ คุณไม่สามารถควบคุมหน้านี้ได้", ephemeral=True)
-            return
-        current_page += 1
-        await i.response.defer()
-        await update_message(i, current_page)
-
-    # Bind callbacks
-    prev_button.callback = prev_callback
-    next_button.callback = next_callback
-
-    # Add buttons to view
-    view.add_item(prev_button)
-    view.add_item(next_button)
+        # Create Button
+        btn = Button(
+            label=label,
+            style=ButtonStyle.secondary,
+            disabled=(
+                (current_page == 1 and delta == -1)
+                or
+                (current_page == total_pages and delta == 1)
+            )
+        )
+        # Set Button Callback
+        btn.callback = callback
+        # Add Button to view
+        view.add_item(btn)
     return view
 
 
