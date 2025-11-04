@@ -6,7 +6,7 @@ from bot.commands.feedback import register_feedback_schedule
 from bot.commands.notification import register_notification
 from bot.commands.pair import register_pair, register_dmpair, weekly_dm_scheduler
 from bot.commands.ijudge import register_ijudge_link
-from bot.commands.score import register_score_command
+from bot.commands.score import register_score_command, register_setscore_command
 from bot.commands.random_pair import register_random_command
 from bot.commands.setup import register_setup_command
 from bot.commands.test_command import register_test_commands
@@ -67,6 +67,8 @@ def run_bot():
             register_json_tools(bot, guild)
             register_help_command(bot, guild)
             register_setup_command(bot, guild)
+            register_setscore_command(bot, guild)
+
             send_noti_task = register_notification(bot, guild)
             synced = await bot.tree.sync(guild=guild)
             print(f'Synced {len(synced)} commands')
