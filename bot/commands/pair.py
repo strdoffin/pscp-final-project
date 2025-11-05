@@ -189,12 +189,13 @@ async def weekly_dm_scheduler(bot: discord.Client):
         print("✅ Weekly DMs sent!")
 
 
-def register_dmpair(bot: discord.Client):
+def register_dmpair(bot: discord.Client, guild: discord.Object):
     """Register the /dmpair command for any guild, with timeout/error handling."""
 
     @bot.tree.command(
         name="dmpair",
         description="Send pair info via DM to members of this guild",
+        guild = guild
     )
     
     async def dmpair_cmd(interaction: discord.Interaction):

@@ -60,7 +60,7 @@ def run_bot():
             register_ijudge_link(bot, guild)
             register_feedback_schedule(bot, guild)
             register_pair(bot, guild)
-            register_dmpair(bot)
+            register_dmpair(bot, guild)
             register_score_command(bot, guild)
             register_random_command(bot, guild)
             register_json_tools(bot, guild)
